@@ -122,7 +122,7 @@
 		2EE98CC871D4EE6DDEDFDC7F /* DefaultExpenseFormView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DefaultExpenseFormView.swift; sourceTree = "<group>"; };
 		30629F5AF1657DCCEC7E8E27 /* Account.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
 		33DAD142F2AC6280C82450B6 /* BalanceResponse.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BalanceResponse.swift; sourceTree = "<group>"; };
-		364376F2881C2D34FDF40D0C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		364376F2881C2D34FDF40D0C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		39BE01F61081E8172764B926 /* DefaultExpense.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DefaultExpense.swift; sourceTree = "<group>"; };
 		3F9B6F2F4D124BA707AB9607 /* IncomeAndExpenseApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IncomeAndExpenseApp.swift; sourceTree = "<group>"; };
 		3FAB370491A55B5F38A850BB /* LoanFormViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoanFormViewModel.swift; sourceTree = "<group>"; };
@@ -214,7 +214,6 @@
 				8606A66BAA928EFBAC9AD405 /* LoginViewModel.swift */,
 				0D294469D094624446F969A5 /* LoginView.swift */,
 			);
-			name = Login;
 			path = Login;
 			sourceTree = "<group>";
 		};
@@ -227,7 +226,6 @@
 				01B9A7F12E6150D9D92CA26A /* APIClient.swift */,
 				468607A902D8149799A3E8DE /* AuthInterceptor.swift */,
 			);
-			name = Networking;
 			path = Networking;
 			sourceTree = "<group>";
 		};
@@ -238,7 +236,6 @@
 				240BDED0CBE776298663BB2D /* TrendChart.swift */,
 				E04ADF7609C3955AB018040C /* DashboardView.swift */,
 			);
-			name = Dashboard;
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
@@ -249,7 +246,6 @@
 				4FB16DC2F3C5311FE4F70C4F /* DefaultIncomes */,
 				4DCACD387A92E15B2F480FC2 /* DefaultExpenses */,
 			);
-			name = Settings;
 			path = Settings;
 			sourceTree = "<group>";
 		};
@@ -261,7 +257,6 @@
 				705E646D39443B7CED31B18F /* RootView.swift */,
 				8A7CE0165BF7AE30DF8FD71C /* MainTabView.swift */,
 			);
-			name = App;
 			path = App;
 			sourceTree = "<group>";
 		};
@@ -273,7 +268,6 @@
 				2EE98CC871D4EE6DDEDFDC7F /* DefaultExpenseFormView.swift */,
 				698954F4D3E4A5E79A385795 /* DefaultExpenseListView.swift */,
 			);
-			name = DefaultExpenses;
 			path = DefaultExpenses;
 			sourceTree = "<group>";
 		};
@@ -285,7 +279,6 @@
 				B0E7583B4995CFC7FFB494AF /* DefaultIncomeFormView.swift */,
 				A606F9C8071DF072959C00AF /* DefaultIncomeListView.swift */,
 			);
-			name = DefaultIncomes;
 			path = DefaultIncomes;
 			sourceTree = "<group>";
 		};
@@ -306,7 +299,6 @@
 				84BE697D6547E5B9773535C2 /* TemplateExpense.swift */,
 				33DAD142F2AC6280C82450B6 /* BalanceResponse.swift */,
 			);
-			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -317,7 +309,6 @@
 				0F0A33B1C67D99DB8226F2AA /* MonthStore.swift */,
 				7E6858521749AA3E4A883C00 /* MethodsStore.swift */,
 			);
-			name = Stores;
 			path = Stores;
 			sourceTree = "<group>";
 		};
@@ -330,7 +321,6 @@
 				A4C30FFD2E0F469BD3DB7D34 /* LoanFormView.swift */,
 				1FFE136D49924FA570FDBA70 /* LoanListView.swift */,
 			);
-			name = Loans;
 			path = Loans;
 			sourceTree = "<group>";
 		};
@@ -340,7 +330,6 @@
 				0EE8D900E704A03737100CB1 /* BalanceViewModel.swift */,
 				8CD298E74900E42C1670ECE3 /* BalanceView.swift */,
 			);
-			name = Balance;
 			path = Balance;
 			sourceTree = "<group>";
 		};
@@ -417,7 +406,6 @@
 				4549739E82FCAE3B0B40C0E7 /* CurrencyFormat.swift */,
 				4D920AA2874E92DEE2178552 /* Haptics.swift */,
 			);
-			name = UIComponents;
 			path = UIComponents;
 			sourceTree = "<group>";
 		};
@@ -434,7 +422,6 @@
 				32935F185A2A38AACBAEB4B3 /* Settings */,
 				0D95205CD386AC5C1D68C7E9 /* Dashboard */,
 			);
-			name = Features;
 			path = Features;
 			sourceTree = "<group>";
 		};
@@ -447,7 +434,6 @@
 				CC2B2BC8E626CF5C378C766C /* IncomeFormViewModel.swift */,
 				A8CF03CF3DADAA8689BEC31D /* IncomeFormView.swift */,
 			);
-			name = Incomes;
 			path = Incomes;
 			sourceTree = "<group>";
 		};
@@ -460,7 +446,6 @@
 				092C984361114E7924954D59 /* ExpenseFormView.swift */,
 				096B0AF2CA4F1E7B6426D953 /* ExpenseListView.swift */,
 			);
-			name = Expenses;
 			path = Expenses;
 			sourceTree = "<group>";
 		};
@@ -470,7 +455,6 @@
 				F30911F4FC63937EDE9A48C5 /* AccountRequireViewModel.swift */,
 				2C3C998D2ED6A8587D3179C3 /* AccountRequireView.swift */,
 			);
-			name = AccountRequire;
 			path = AccountRequire;
 			sourceTree = "<group>";
 		};
@@ -480,7 +464,6 @@
 				B3EF69F06AE92AB5BB932AD5 /* Info.plist */,
 				364376F2881C2D34FDF40D0C /* PrivacyInfo.xcprivacy */,
 			);
-			name = Resources;
 			path = Resources;
 			sourceTree = "<group>";
 		};
@@ -490,7 +473,6 @@
 				05E59F4387F2C746FC0AAFB3 /* MethodRequireViewModel.swift */,
 				7DB3ADC79447370FAAC6F407 /* MethodRequireView.swift */,
 			);
-			name = MethodRequire;
 			path = MethodRequire;
 			sourceTree = "<group>";
 		};
@@ -862,6 +844,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IncomeAndExpense/Preview Content\"";
+				DEVELOPMENT_TEAM = T94QJ3ZC7J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = IncomeAndExpense/Resources/Info.plist;
@@ -886,6 +869,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IncomeAndExpense/Preview Content\"";
+				DEVELOPMENT_TEAM = T94QJ3ZC7J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = IncomeAndExpense/Resources/Info.plist;
