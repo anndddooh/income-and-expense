@@ -87,7 +87,7 @@ export default function DefaultExpenseForm() {
   })
 
   useEffect(() => {
-    if (existing) {
+    if (existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_day: existing.pay_day,
@@ -97,7 +97,7 @@ export default function DefaultExpenseForm() {
         months: existing.months,
       })
     }
-  }, [existing, form])
+  }, [existing, methods.length, form])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
