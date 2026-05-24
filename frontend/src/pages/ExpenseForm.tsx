@@ -94,7 +94,7 @@ export default function ExpenseForm() {
   })
 
   useEffect(() => {
-    if (existing) {
+    if (existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_date: existing.pay_date,
@@ -104,7 +104,7 @@ export default function ExpenseForm() {
         memo: existing.memo ?? '',
       })
     }
-  }, [existing, form])
+  }, [existing, methods.length, form])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
@@ -234,7 +234,12 @@ export default function ExpenseForm() {
                         type="number"
                         min={0}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />

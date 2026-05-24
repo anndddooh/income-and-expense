@@ -105,7 +105,7 @@ export default function LoanForm() {
   })
 
   useEffect(() => {
-    if (existing) {
+    if (existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_day: existing.pay_day,
@@ -119,7 +119,7 @@ export default function LoanForm() {
         state: existing.state,
       })
     }
-  }, [existing, form])
+  }, [existing, methods.length, form])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
@@ -312,7 +312,12 @@ export default function LoanForm() {
                         type="number"
                         min={0}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -330,7 +335,12 @@ export default function LoanForm() {
                         type="number"
                         min={0}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />

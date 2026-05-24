@@ -88,7 +88,7 @@ class _InexViewSetBase(viewsets.ModelViewSet):
             qs = qs.filter(pay_date__gte=first_date, pay_date__lte=last_date)
         return qs.order_by(
             'method__account__user__name', 'method__name',
-            'method__account__bank__name', 'state', 'pay_date', 'name'
+            'method__account__bank__name', '-amount', 'state', 'pay_date', 'name'
         )
 
     def destroy(self, request, *args, **kwargs):

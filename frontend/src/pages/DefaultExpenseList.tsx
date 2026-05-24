@@ -75,6 +75,7 @@ export default function DefaultExpenseList() {
                 <TableHead>名称</TableHead>
                 <TableHead>支払日</TableHead>
                 <TableHead>支払方法</TableHead>
+                <TableHead>口座</TableHead>
                 <TableHead className="text-right">金額</TableHead>
                 <TableHead>適用月</TableHead>
                 <TableHead>状態</TableHead>
@@ -84,21 +85,21 @@ export default function DefaultExpenseList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     読み込み中...
                   </TableCell>
                 </TableRow>
               )}
               {error && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-destructive">
+                  <TableCell colSpan={8} className="text-center text-destructive">
                     エラー: {String(error)}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && !error && items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     データがありません
                   </TableCell>
                 </TableRow>
@@ -124,6 +125,9 @@ export default function DefaultExpenseList() {
                   </TableCell>
                   <TableCell>{it.pay_day}</TableCell>
                   <TableCell>{it.method_name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {it.account.user} / {it.account.bank}
+                  </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {it.formed_amount}
                   </TableCell>
