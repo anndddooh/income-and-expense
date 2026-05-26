@@ -180,7 +180,12 @@ export default function LoanForm() {
                         min={1}
                         max={28}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,8 +204,11 @@ export default function LoanForm() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -220,8 +228,11 @@ export default function LoanForm() {
                           min={1}
                           max={12}
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -242,8 +253,11 @@ export default function LoanForm() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -263,8 +277,11 @@ export default function LoanForm() {
                           min={1}
                           max={12}
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
