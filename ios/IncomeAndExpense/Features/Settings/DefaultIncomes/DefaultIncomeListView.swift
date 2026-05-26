@@ -70,6 +70,8 @@ struct DefaultIncomeListView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Text(item.methodName)
                     .font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: "\(item.account.user) / \(item.account.bank)")
+                    .font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 Text(item.amount.yenString)
                     .font(.caption.monospacedDigit())
