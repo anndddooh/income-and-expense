@@ -12,10 +12,9 @@ struct IncomeFormView: View {
             Form {
                 Section {
                     TextField("名前", text: $viewModel.name)
-                    DatePicker(
-                        "支払日",
-                        selection: $viewModel.payDate,
-                        displayedComponents: .date
+                    JapaneseDatePicker(
+                        title: "支払日",
+                        selection: $viewModel.payDate
                     )
                     Picker("支払方法", selection: $viewModel.methodID) {
                         Text("選択してください").tag(Int?.none)
