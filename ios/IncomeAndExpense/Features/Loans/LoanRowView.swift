@@ -25,6 +25,8 @@ struct LoanRowView: View {
                 Image(systemName: "creditcard")
                     .font(.caption2)
                 Text(loan.methodName)
+                Text(verbatim: "·")
+                Text(verbatim: "\(loan.account.user) / \(loan.account.bank)")
                 Spacer()
                 Text(verbatim: "初回 \(loan.amountFirst.yenString)")
                     .monospacedDigit()

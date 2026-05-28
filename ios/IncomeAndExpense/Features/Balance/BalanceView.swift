@@ -114,7 +114,7 @@ private struct BalanceEditSheet: View {
                     LabeledContent("銀行", value: account.bank)
                     LabeledContent("ユーザー", value: account.user)
                     TextField("残高", text: $amount)
-                        .keyboardType(.numberPad)
+                        .keyboardType(.numbersAndPunctuation)
                 }
 
                 if let errorMessage {

@@ -57,6 +57,7 @@
 		943A42AFC9D006F0B70326B3 /* JSONCoders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2C66D66CD785CAE3D737F5 /* JSONCoders.swift */; };
 		9E90184199414805E5DB634F /* InexState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006AC541F2D2604DB2EFDA68 /* InexState.swift */; };
 		A5F6B03FBB9489B660480DC7 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4549739E82FCAE3B0B40C0E7 /* CurrencyFormat.swift */; };
+		D0A7E1F2B3C4D5E6A7B8C9D0 /* DateFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B2C3D4E5F60718A9B0C1D2 /* DateFormat.swift */; };
 		A62A58B28272D3C2E6F60899 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B9A7F12E6150D9D92CA26A /* APIClient.swift */; };
 		AB8A50C42C72287D7E884927 /* DefaultIncomeFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E7583B4995CFC7FFB494AF /* DefaultIncomeFormView.swift */; };
 		AFB2A685B90EA8E12C6A6210 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 364376F2881C2D34FDF40D0C /* PrivacyInfo.xcprivacy */; };
@@ -128,6 +129,7 @@
 		3FAB370491A55B5F38A850BB /* LoanFormViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoanFormViewModel.swift; sourceTree = "<group>"; };
 		440D7E9C8A53F8E44C105F97 /* IncomeListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IncomeListView.swift; sourceTree = "<group>"; };
 		4549739E82FCAE3B0B40C0E7 /* CurrencyFormat.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
+		E1B2C3D4E5F60718A9B0C1D2 /* DateFormat.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateFormat.swift; sourceTree = "<group>"; };
 		468607A902D8149799A3E8DE /* AuthInterceptor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthInterceptor.swift; sourceTree = "<group>"; };
 		4D920AA2874E92DEE2178552 /* Haptics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		4F2C66D66CD785CAE3D737F5 /* JSONCoders.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONCoders.swift; sourceTree = "<group>"; };
@@ -404,6 +406,7 @@
 				FD328508B47D6741D7569BB7 /* Palette.swift */,
 				F9590CD32AE9081EF2266891 /* PlaceholderRow.swift */,
 				4549739E82FCAE3B0B40C0E7 /* CurrencyFormat.swift */,
+				E1B2C3D4E5F60718A9B0C1D2 /* DateFormat.swift */,
 				4D920AA2874E92DEE2178552 /* Haptics.swift */,
 			);
 			path = UIComponents;
@@ -680,6 +683,7 @@
 				F5B8FFC76698E485DFE83852 /* Palette.swift in Sources */,
 				121A5078F08B28551253D729 /* PlaceholderRow.swift in Sources */,
 				A5F6B03FBB9489B660480DC7 /* CurrencyFormat.swift in Sources */,
+				D0A7E1F2B3C4D5E6A7B8C9D0 /* DateFormat.swift in Sources */,
 				22D0A959B0C67FBE114647F9 /* Haptics.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
