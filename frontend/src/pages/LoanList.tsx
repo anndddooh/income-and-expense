@@ -81,6 +81,7 @@ export default function LoanList() {
                 <TableHead>開始</TableHead>
                 <TableHead>終了</TableHead>
                 <TableHead>支払方法</TableHead>
+                <TableHead>口座</TableHead>
                 <TableHead className="text-right">初回</TableHead>
                 <TableHead className="text-right">2回目以降</TableHead>
                 <TableHead>状態</TableHead>
@@ -91,21 +92,21 @@ export default function LoanList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground">
                     読み込み中...
                   </TableCell>
                 </TableRow>
               )}
               {error && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-destructive">
+                  <TableCell colSpan={11} className="text-center text-destructive">
                     エラー: {String(error)}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && !error && loans.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground">
                     データがありません
                   </TableCell>
                 </TableRow>
@@ -142,6 +143,9 @@ export default function LoanList() {
                       {l.last_year}/{l.last_month}
                     </TableCell>
                     <TableCell>{l.method_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.account.user} / {l.account.bank}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {l.formed_amount_first}
                     </TableCell>
