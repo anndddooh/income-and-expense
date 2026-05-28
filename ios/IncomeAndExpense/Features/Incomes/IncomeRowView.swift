@@ -9,15 +9,11 @@ struct IncomeRowView: View {
                 Text(income.name)
                     .font(.body)
                     .fontWeight(.medium)
-                HStack(spacing: 6) {
-                    Text(verbatim: income.payDate.japaneseMonthDay)
-                    Text(verbatim: "·")
-                    Text(income.methodName)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                Text(verbatim: "\(income.account.user) / \(income.account.bank)")
-                    .font(.caption2)
+                Text(verbatim: income.payDate.japaneseMonthDay)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(verbatim: "\(income.methodName) · \(income.account.user) / \(income.account.bank)")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)

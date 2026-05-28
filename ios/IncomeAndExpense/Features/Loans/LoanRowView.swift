@@ -12,21 +12,11 @@ struct LoanRowView: View {
                 Spacer()
                 StateBadge(state: loan.state)
             }
+            Text(verbatim: "\(loan.firstYear)年\(loan.firstMonth)月 – \(loan.lastYear)年\(loan.lastMonth)月 · 毎月\(loan.payDay)日")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .font(.caption2)
-                Text(verbatim: "\(loan.firstYear)/\(loan.firstMonth) – \(loan.lastYear)/\(loan.lastMonth)")
-                Text(verbatim: "·")
-                Text(verbatim: "毎月\(loan.payDay)日")
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            HStack(spacing: 6) {
-                Image(systemName: "creditcard")
-                    .font(.caption2)
-                Text(loan.methodName)
-                Text(verbatim: "·")
-                Text(verbatim: "\(loan.account.user) / \(loan.account.bank)")
+                Text(verbatim: "\(loan.methodName) · \(loan.account.user) / \(loan.account.bank)")
                 Spacer()
                 Text(verbatim: "初回 \(loan.amountFirst.yenString)")
                     .monospacedDigit()

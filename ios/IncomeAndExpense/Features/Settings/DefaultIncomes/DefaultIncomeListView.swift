@@ -65,13 +65,9 @@ struct DefaultIncomeListView: View {
                 Spacer()
                 StateBadge(state: item.state)
             }
-            HStack(spacing: 8) {
-                Text(verbatim: "毎月\(item.payDay)日")
+            HStack(spacing: 6) {
+                Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
                     .font(.caption).foregroundStyle(.secondary)
-                Text(item.methodName)
-                    .font(.caption).foregroundStyle(.secondary)
-                Text(verbatim: "\(item.account.user) / \(item.account.bank)")
-                    .font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 Text(item.amount.yenString)
                     .font(.caption.monospacedDigit())
