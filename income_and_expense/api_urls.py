@@ -10,10 +10,25 @@ router.register(r'incomes', api_views.IncomeViewSet, basename='income')
 router.register(r'expenses', api_views.ExpenseViewSet, basename='expense')
 router.register(r'accounts', api_views.AccountViewSet, basename='account')
 router.register(r'loans', api_views.LoanViewSet, basename='loan')
+router.register(
+    r'default_incomes',
+    api_views.DefaultIncomeViewSet,
+    basename='default-income',
+)
+router.register(
+    r'default_expenses',
+    api_views.DefaultExpenseViewSet,
+    basename='default-expense',
+)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('methods/', api_views.MethodListAPIView.as_view(), name='method-list'),
+    path(
+        'template_expenses/',
+        api_views.TemplateExpenseListAPIView.as_view(),
+        name='template-expense-list',
+    ),
     path(
         'methods/<int:pk>/done/',
         api_views.MethodDoneAPIView.as_view(),

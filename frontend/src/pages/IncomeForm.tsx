@@ -31,7 +31,7 @@ import { fetchMethods } from '@/api/methods'
 const schema = z.object({
   name: z.string().min(1, '名称は必須です'),
   pay_date: z.string().min(1, '支払日は必須です'),
-  method: z.number().int().positive('方法を選択してください'),
+  method: z.number().int().positive('支払方法を選択してください'),
   amount: z.number().int().min(0, '金額は0以上で入力してください'),
   state: z.number().int().min(0).max(2),
   memo: z.string().nullable().optional(),
@@ -64,7 +64,12 @@ export default function IncomeForm() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '',
-      pay_date: `${year}-${String(month).padStart(2, '0')}-01`,
+      pay_date: (() => {
+        const now = new Date()
+        const day = now.getFullYear() === year && now.getMonth() + 1 === month
+          ? now.getDate() : 1
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      })(),
       method: 0,
       amount: 0,
       state: 0,
@@ -83,7 +88,7 @@ export default function IncomeForm() {
   })
 
   useEffect(() => {
-    if (existing) {
+    if (existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_date: existing.pay_date,
@@ -93,7 +98,7 @@ export default function IncomeForm() {
         memo: existing.memo ?? '',
       })
     }
-  }, [existing, form])
+  }, [existing, methods.length, form])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
@@ -163,7 +168,7 @@ export default function IncomeForm() {
                 name="method"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>方法</FormLabel>
+                    <FormLabel>支払方法</FormLabel>
                     <Select
                       value={field.value ? String(field.value) : undefined}
                       onValueChange={(v) => field.onChange(Number(v))}
@@ -196,7 +201,12 @@ export default function IncomeForm() {
                         type="number"
                         min={0}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />

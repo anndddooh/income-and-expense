@@ -5,8 +5,13 @@ import type { Income as Inex, IncomeInput as InexInput } from './types'
 export type Expense = Inex
 export type ExpenseInput = InexInput
 
+export type ExpenseListResponse = {
+  results: Expense[]
+  balance: number
+}
+
 export const fetchExpenses = async (year: number, month: number) => {
-  const { data } = await api.get<Expense[]>('/expenses/', {
+  const { data } = await api.get<ExpenseListResponse>('/expenses/', {
     params: { year, month },
   })
   return data

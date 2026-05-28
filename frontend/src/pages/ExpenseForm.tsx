@@ -27,11 +27,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { applyServerErrors } from '@/lib/form-errors'
 import { createExpense, fetchExpense, updateExpense } from '@/api/expenses'
 import { fetchMethods } from '@/api/methods'
+import { fetchTemplateExpenses } from '@/api/template-expenses'
 
 const schema = z.object({
   name: z.string().min(1, '名称は必須です'),
   pay_date: z.string().min(1, '支払日は必須です'),
-  method: z.number().int().positive('方法を選択してください'),
+  method: z.number().int().positive('支払方法を選択してください'),
   amount: z.number().int().min(0, '金額は0以上で入力してください'),
   state: z.number().int().min(0).max(2),
   memo: z.string().nullable().optional(),
@@ -64,7 +65,12 @@ export default function ExpenseForm() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '',
-      pay_date: `${year}-${String(month).padStart(2, '0')}-01`,
+      pay_date: (() => {
+        const now = new Date()
+        const day = now.getFullYear() === year && now.getMonth() + 1 === month
+          ? now.getDate() : 1
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      })(),
       method: 0,
       amount: 0,
       state: 0,
@@ -76,6 +82,11 @@ export default function ExpenseForm() {
     queryKey: ['methods'],
     queryFn: fetchMethods,
   })
+  const { data: templates = [] } = useQuery({
+    queryKey: ['template-expenses'],
+    queryFn: fetchTemplateExpenses,
+    enabled: !isEdit,
+  })
   const { data: existing } = useQuery({
     queryKey: ['expense', itemId],
     queryFn: () => fetchExpense(itemId!),
@@ -83,7 +94,7 @@ export default function ExpenseForm() {
   })
 
   useEffect(() => {
-    if (existing) {
+    if (existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_date: existing.pay_date,
@@ -93,13 +104,22 @@ export default function ExpenseForm() {
         memo: existing.memo ?? '',
       })
     }
-  }, [existing, form])
+  }, [existing, methods.length, form])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
       form.setValue('method', methods[0].id)
     }
   }, [methods, isEdit, form])
+
+  const applyTemplate = (templateId: string) => {
+    const t = templates.find((t) => String(t.id) === templateId)
+    if (!t) return
+    form.setValue('name', t.name)
+    form.setValue('pay_date', t.pay_date)
+    form.setValue('method', t.method)
+    form.setValue('state', t.state)
+  }
 
   const mut = useMutation({
     mutationFn: (values: FormValues) => {
@@ -132,6 +152,24 @@ export default function ExpenseForm() {
                 mut.mutate(v)
               })}
             >
+              {!isEdit && templates.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">簡易入力</label>
+                  <Select onValueChange={applyTemplate}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="テンプレートを選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.template_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="name"
@@ -163,7 +201,7 @@ export default function ExpenseForm() {
                 name="method"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>方法</FormLabel>
+                    <FormLabel>支払方法</FormLabel>
                     <Select
                       value={field.value ? String(field.value) : undefined}
                       onValueChange={(v) => field.onChange(Number(v))}
@@ -196,7 +234,12 @@ export default function ExpenseForm() {
                         type="number"
                         min={0}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />

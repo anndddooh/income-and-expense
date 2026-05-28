@@ -3,13 +3,11 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
+import SummaryCard from '@/components/SummaryCard'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -20,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
 import {
   fetchBalance,
   updateAccountBalance,
@@ -40,7 +37,7 @@ export default function Balance() {
   })
 
   const [editing, setEditing] = useState<number | null>(null)
-  const [draft, setDraft] = useState<number>(0)
+  const [draft, setDraft] = useState('')
 
   const mut = useMutation({
     mutationFn: ({ id, balance }: { id: number; balance: number }) =>
@@ -55,7 +52,7 @@ export default function Balance() {
 
   const startEdit = (row: AccountRow) => {
     setEditing(row.id)
-    setDraft(row.balance)
+    setDraft(String(row.balance))
   }
 
   return (
@@ -106,7 +103,7 @@ export default function Balance() {
                           <Input
                             type="number"
                             value={draft}
-                            onChange={(e) => setDraft(Number(e.target.value))}
+                            onChange={(e) => setDraft(e.target.value)}
                             className="ml-auto w-36"
                           />
                         ) : (
@@ -119,7 +116,7 @@ export default function Balance() {
                             <Button
                               size="sm"
                               onClick={() =>
-                                mut.mutate({ id: a.id, balance: draft })
+                                mut.mutate({ id: a.id, balance: Number(draft) })
                               }
                               disabled={mut.isPending}
                             >
@@ -155,24 +152,3 @@ export default function Balance() {
   )
 }
 
-function SummaryCard({
-  label,
-  value,
-  valueClassName,
-}: {
-  label: string
-  value: string
-  valueClassName?: string
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className={cn('text-2xl tabular-nums', valueClassName)}>
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  )
-}

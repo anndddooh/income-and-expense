@@ -1,12 +1,15 @@
 import {
   BadgeDollarSign,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
   CreditCard,
   LayoutDashboard,
   Landmark,
+  LogOut,
   PiggyBank,
   ReceiptText,
+  Settings,
   Wallet,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -18,6 +21,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { clearTokens } from '@/lib/auth'
 import {
   Popover,
   PopoverContent,
@@ -45,6 +49,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { todayYearMonth } from '@/util/date'
 
@@ -58,9 +63,9 @@ type NavItem = {
 const MAIN_NAV: NavItem[] = [
   {
     label: 'ダッシュボード',
-    path: '',
+    path: '/dashboard',
     icon: <LayoutDashboard className="size-4" />,
-    requiresMonth: false,
+    requiresMonth: true,
   },
   {
     label: '収入',
@@ -110,22 +115,34 @@ function useCurrentYearMonth() {
 }
 
 const CURRENT_YEAR = todayYearMonth().year
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => CURRENT_YEAR - 7 + i)
+const YEAR_OPTIONS = Array.from({ length: 101 }, (_, i) => CURRENT_YEAR - 50 + i)
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
 
 export default function AppLayout() {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent />
+    </SidebarProvider>
+  )
+}
+
+function AppLayoutContent() {
   const location = useLocation()
   const navigate = useNavigate()
   const { year, month } = useCurrentYearMonth()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
+  const seg = location.pathname.split('/').filter(Boolean)
+  const currentBase = seg[0] ? `/${seg[0]}` : '/dashboard'
+  const isMonthScoped = MAIN_NAV.some((n) => n.path === currentBase)
 
   const goTo = (y: number, m: number) => {
-    const seg = location.pathname.split('/').filter(Boolean)
-    const base = seg[0] ? `/${seg[0]}` : ''
-    if (base) {
-      navigate(`${base}/${y}/${m}`)
-    } else {
-      navigate(`/`, { state: { year: y, month: m } })
-    }
+    const base = isMonthScoped ? currentBase : '/dashboard'
+    navigate(`${base}/${y}/${m}`)
   }
 
   const shift = (delta: number) => {
@@ -142,7 +159,7 @@ export default function AppLayout() {
   }
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
@@ -162,12 +179,10 @@ export default function AppLayout() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {MAIN_NAV.map((item) => {
-                  const to = item.requiresMonth
-                    ? `${item.path}/${year}/${month}`
-                    : '/'
-                  const active = item.path
-                    ? location.pathname.startsWith(item.path)
-                    : location.pathname === '/'
+                  const to = `${item.path}/${year}/${month}`
+                  const active = item.path === '/dashboard'
+                    ? location.pathname === '/' || location.pathname.startsWith('/dashboard')
+                    : location.pathname.startsWith(item.path)
                   return (
                     <SidebarMenuItem key={item.label}>
                       <SidebarMenuButton
@@ -175,7 +190,7 @@ export default function AppLayout() {
                         isActive={active}
                         tooltip={item.label}
                       >
-                        <Link to={to}>
+                        <Link to={to} onClick={closeMobileSidebar}>
                           {item.icon}
                           <span>{item.label}</span>
                         </Link>
@@ -188,14 +203,39 @@ export default function AppLayout() {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          <div className="px-2 py-2 text-xs text-muted-foreground">
-            React + DRF
-          </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="設定"
+                isActive={location.pathname.startsWith('/settings')}
+              >
+                <Link to="/settings" onClick={closeMobileSidebar}>
+                  <Settings className="size-4" />
+                  <span>設定</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="ログアウト"
+                onClick={() => {
+                  clearTokens()
+                  navigate('/login', { replace: true })
+                }}
+              >
+                <LogOut className="size-4" />
+                <span>ログアウト</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background px-4">
           <SidebarTrigger />
+          {isMonthScoped && (
+            <>
           <Separator orientation="vertical" className="h-6" />
           <div className="flex items-center gap-2">
             <Button
@@ -262,12 +302,25 @@ export default function AppLayout() {
               次月
               <ChevronRight className="size-4" />
             </Button>
+            {(year !== todayYearMonth().year || month !== todayYearMonth().month) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => goTo(todayYearMonth().year, todayYearMonth().month)}
+                aria-label="今月に戻る"
+              >
+                <CalendarCheck className="size-4" />
+                今月
+              </Button>
+            )}
           </div>
+            </>
+          )}
         </header>
         <main className="flex-1 p-6">
           <Outlet />
         </main>
       </SidebarInset>
-    </SidebarProvider>
+    </>
   )
 }

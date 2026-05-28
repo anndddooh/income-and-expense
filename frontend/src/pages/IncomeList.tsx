@@ -41,10 +41,12 @@ export default function IncomeList() {
   const [deleting, setDeleting] = useState<Income | null>(null)
 
   const key = ['incomes', year, month]
-  const { data: incomes = [], isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: key,
     queryFn: () => fetchIncomes(year, month),
   })
+  const incomes = data?.results ?? []
+  const prevBalance = data?.prev_balance ?? 0
 
   const delMut = useMutation({
     mutationFn: (id: number) => deleteIncome(id),
@@ -101,7 +103,7 @@ export default function IncomeList() {
               <TableRow>
                 <TableHead>支払日</TableHead>
                 <TableHead>名称</TableHead>
-                <TableHead>方法</TableHead>
+                <TableHead>支払方法</TableHead>
                 <TableHead>口座</TableHead>
                 <TableHead className="text-right">金額</TableHead>
                 <TableHead>状態</TableHead>
@@ -180,8 +182,10 @@ export default function IncomeList() {
         </CardContent>
       </Card>
 
-      <div className="mt-4 text-sm text-muted-foreground">
-        合計: <span className="font-semibold text-foreground tabular-nums">¥{total.toLocaleString()}</span> ({incomes.length}件)
+      <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+        <div>前月残高: <span className="font-semibold text-foreground tabular-nums">¥{prevBalance.toLocaleString()}</span></div>
+        <div>当月収入: <span className="font-semibold text-foreground tabular-nums">¥{total.toLocaleString()}</span>（{incomes.length}件）</div>
+        <div>合計: <span className="font-semibold text-foreground tabular-nums">¥{(prevBalance + total).toLocaleString()}</span></div>
       </div>
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -210,6 +214,15 @@ export default function IncomeList() {
 function extractError(e: unknown): string {
   type AxiosLike = { response?: { data?: unknown }; message?: string }
   const ax = e as AxiosLike
-  if (ax?.response?.data) return JSON.stringify(ax.response.data)
+  const data = ax?.response?.data
+  if (Array.isArray(data)) return data.join(' ')
+  if (typeof data === 'string') return data
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>
+    if (typeof record.detail === 'string') return record.detail
+    return Object.values(record)
+      .map((v) => (Array.isArray(v) ? v.join(' ') : String(v)))
+      .join('\n')
+  }
   return ax?.message ?? String(e)
 }

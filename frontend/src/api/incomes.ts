@@ -1,8 +1,13 @@
 import { api } from './client'
 import type { Income, IncomeInput } from './types'
 
+export type IncomeListResponse = {
+  results: Income[]
+  prev_balance: number
+}
+
 export const fetchIncomes = async (year: number, month: number) => {
-  const { data } = await api.get<Income[]>('/incomes/', { params: { year, month } })
+  const { data } = await api.get<IncomeListResponse>('/incomes/', { params: { year, month } })
   return data
 }
 

@@ -10,12 +10,14 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from income_and_expense.models import (
-    Account, DefaultExpenseMonth, DefaultIncomeMonth, Expense, Income, Loan,
-    Method, StateChoices,
+    Account, DefaultExpense, DefaultExpenseMonth, DefaultIncome,
+    DefaultIncomeMonth, Expense, Income, Loan, Method, StateChoices,
+    TemplateExpense,
 )
 from income_and_expense.serializers import (
-    AccountSerializer, ExpenseSerializer, IncomeSerializer, LoanSerializer,
-    MethodSerializer,
+    AccountSerializer, DefaultExpenseSerializer, DefaultIncomeSerializer,
+    ExpenseSerializer, IncomeSerializer, LoanSerializer, MethodSerializer,
+    TemplateExpenseSerializer,
 )
 
 
@@ -36,7 +38,7 @@ def _parse_year_month(request):
         raise ValidationError('year, month は整数で指定してください')
 
 
-def _can_update_or_delete(year, month):
+def _can_delete(year, month):
     current_time = timezone.now()
     current_first = datetime.date(current_time.year, current_time.month, 1)
     last_month_first = current_first - relativedelta(months=1)
@@ -61,6 +63,18 @@ def _get_balance_done(year, month):
     return inc - exp
 
 
+def _get_balance(year, month):
+    """該当月末までの残高(全状態)。"""
+    _, last_date = _month_range(year, month)
+    inc = Income.objects.filter(
+        pay_date__lte=last_date,
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+    exp = Expense.objects.filter(
+        pay_date__lte=last_date,
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+    return inc - exp
+
+
 class _InexViewSetBase(viewsets.ModelViewSet):
     model = None
 
@@ -74,23 +88,13 @@ class _InexViewSetBase(viewsets.ModelViewSet):
             qs = qs.filter(pay_date__gte=first_date, pay_date__lte=last_date)
         return qs.order_by(
             'method__account__user__name', 'method__name',
-            'method__account__bank__name', 'state', 'pay_date', 'name'
+            'method__account__bank__name', '-amount', 'state', 'pay_date', 'name'
         )
 
-    def _check_update_delete_allowed(self, instance):
-        if not _can_update_or_delete(instance.pay_date.year, instance.pay_date.month):
-            raise ValidationError("古いデータは更新・削除できません。")
-
-    def update(self, request, *args, **kwargs):
-        self._check_update_delete_allowed(self.get_object())
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        self._check_update_delete_allowed(self.get_object())
-        return super().partial_update(request, *args, **kwargs)
-
     def destroy(self, request, *args, **kwargs):
-        self._check_update_delete_allowed(self.get_object())
+        instance = self.get_object()
+        if not _can_delete(instance.pay_date.year, instance.pay_date.month):
+            raise ValidationError("古いデータは削除できません。")
         return super().destroy(request, *args, **kwargs)
 
 
@@ -98,6 +102,16 @@ class IncomeViewSet(_InexViewSetBase):
     serializer_class = IncomeSerializer
     model = Income
     queryset = Income.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        year, month = _parse_year_month(request)
+        prev = datetime.date(year, month, 1) - relativedelta(months=1)
+        response = super().list(request, *args, **kwargs)
+        response.data = {
+            'results': response.data,
+            'prev_balance': _get_balance(prev.year, prev.month),
+        }
+        return response
 
     @action(detail=False, methods=['post'], url_path='add_defaults')
     def add_defaults(self, request):
@@ -132,6 +146,15 @@ class ExpenseViewSet(_InexViewSetBase):
     serializer_class = ExpenseSerializer
     model = Expense
     queryset = Expense.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        year, month = _parse_year_month(request)
+        response = super().list(request, *args, **kwargs)
+        response.data = {
+            'results': response.data,
+            'balance': _get_balance(year, month),
+        }
+        return response
 
     @action(detail=False, methods=['post'], url_path='add_defaults')
     def add_defaults(self, request):
@@ -181,6 +204,13 @@ class ExpenseViewSet(_InexViewSetBase):
         return Response({'added': add_num}, status=status.HTTP_201_CREATED)
 
 
+class TemplateExpenseListAPIView(generics.ListAPIView):
+    serializer_class = TemplateExpenseSerializer
+    queryset = TemplateExpense.objects.select_related(
+        'method__account__user', 'method__account__bank'
+    ).all()
+
+
 class MethodListAPIView(generics.ListAPIView):
     serializer_class = MethodSerializer
 
@@ -190,6 +220,20 @@ class MethodListAPIView(generics.ListAPIView):
         ).order_by(
             'name', 'account__user__name', 'account__bank__name'
         )
+
+
+class DefaultIncomeViewSet(viewsets.ModelViewSet):
+    serializer_class = DefaultIncomeSerializer
+    queryset = DefaultIncome.objects.select_related(
+        'method__account__user', 'method__account__bank'
+    ).order_by('name')
+
+
+class DefaultExpenseViewSet(viewsets.ModelViewSet):
+    serializer_class = DefaultExpenseSerializer
+    queryset = DefaultExpense.objects.select_related(
+        'method__account__user', 'method__account__bank'
+    ).order_by('name')
 
 
 class LoanViewSet(viewsets.ModelViewSet):

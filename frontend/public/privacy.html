@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>プライバシーポリシー | INEX</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+        line-height: 1.7;
+        color: #222;
+        background: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { color: #e4e4e4; background: #1c1c1e; }
+        a { color: #6cb6ff; }
+      }
+      h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.15rem; margin-top: 2rem; border-bottom: 1px solid currentColor; padding-bottom: 0.25rem; }
+      h3 { font-size: 1rem; margin-top: 1.2rem; }
+      .meta { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+      ul { padding-left: 1.4rem; }
+      li { margin: 0.25rem 0; }
+      footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.85rem; color: #888; }
+    </style>
+  </head>
+  <body>
+    <h1>プライバシーポリシー</h1>
+    <p class="meta">INEX（収支管理アプリ） / 最終更新日：2026年5月23日</p>
+
+    <h2>1. はじめに</h2>
+    <p>本ポリシーは、INEX（以下「本アプリ」）が取り扱う情報の方針を定めるものです。本アプリは個人開発者 Hironori Ando が提供する家計管理ツールで、TestFlight 経由で限定ユーザーに配布されています。</p>
+
+    <h2>2. 取り扱う情報</h2>
+
+    <h3>2.1 アカウント情報</h3>
+    <ul>
+      <li>ユーザー名（ユーザーが任意に設定）</li>
+      <li>パスワード（ハッシュ化して保管。平文では保存しません）</li>
+    </ul>
+
+    <h3>2.2 ユーザーが入力する家計データ</h3>
+    <ul>
+      <li>収入・支出の金額、日付、メモ</li>
+      <li>支払方法、口座情報、残高</li>
+      <li>借入・貸出の記録</li>
+      <li>その他、ユーザーが本アプリに入力したすべての家計データ</li>
+    </ul>
+
+    <h3>2.3 認証トークン</h3>
+    <p>ログイン状態維持のための JWT トークンを端末のセキュア領域（iOS は Keychain、Web は localStorage）に保存します。</p>
+
+    <h3>2.4 サーバー側のログ</h3>
+    <p>アクセス時刻、IP アドレス、エラーログなど、運用基盤の標準的なログを取得します。</p>
+
+    <p>本アプリはクラッシュレポート、利用統計、広告 ID 等、その他のいかなる解析データも収集しません。</p>
+
+    <h2>3. 利用目的</h2>
+    <ul>
+      <li>本アプリ機能の提供（記録・表示・計算）</li>
+      <li>ユーザー認証およびセッション管理</li>
+      <li>不正アクセスの防止、障害調査</li>
+    </ul>
+
+    <h2>4. 第三者への提供</h2>
+    <p>取得した情報を第三者に販売・提供しません。広告配信や行動追跡のための第三者 SDK を一切組み込んでいません。ただし以下の場合を除きます。</p>
+    <ul>
+      <li>法令に基づく開示請求があった場合</li>
+      <li>ユーザー本人の同意がある場合</li>
+    </ul>
+
+    <h2>5. データの保管場所と保管期間</h2>
+    <ul>
+      <li>保管基盤：Heroku（米国データセンター）</li>
+      <li>保管期間：アカウントが有効な間。削除要請を受けた場合は速やかに削除します。</li>
+    </ul>
+
+    <h2>6. ユーザーの権利</h2>
+    <p>ユーザーは、自身のデータの開示・訂正・削除、およびアカウントの削除を要請できます。要請は下記連絡先までお願いします。</p>
+
+    <h2>7. セキュリティ</h2>
+    <ul>
+      <li>通信はすべて HTTPS（TLS）で暗号化</li>
+      <li>パスワードはハッシュ化して保管（Django の PBKDF2 方式）</li>
+      <li>認証は JWT トークン方式</li>
+      <li>iOS アプリでは認証トークンを端末の Keychain に保管</li>
+    </ul>
+
+    <h2>8. 子供のデータ</h2>
+    <p>本アプリは 13 歳未満の利用を想定していません。13 歳未満のユーザーから意図的に情報を収集することはありません。</p>
+
+    <h2>9. ポリシーの改定</h2>
+    <p>本ポリシーは予告なく改定される場合があります。重要な変更があった場合は、アプリ内またはメールで通知します。</p>
+
+    <h2>10. 連絡先</h2>
+    <ul>
+      <li>メール：annndddddooooooo@gmail.com</li>
+      <li>開発者：Hironori Ando</li>
+    </ul>
+
+    <footer>
+      <p>本ページは INEX 利用者向けの内部ドキュメントです。本アプリは TestFlight による招待制配布のみで、一般公開はされていません。</p>
+    </footer>
+  </body>
+</html>
