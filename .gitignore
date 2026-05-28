@@ -7,3 +7,20 @@ local_settings.py
 .sass-cache/
 *.css.map
 .idea/
+.DS_Store
+.env
+node_modules/
+package.json
+package-lock.json
+.claude/settings.local.json
+.coverage
+
+# Xcode / iOS
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/**/DerivedData/
+ios/build/
+ios/.build/
+*.ipa
+*.dSYM.zip
+*.dSYM
