@@ -35,9 +35,17 @@ const schema = z.object({
     .min(1, '1〜28の範囲で指定してください')
     .max(28, '1〜28の範囲で指定してください'),
   first_year: z.number().int().positive('開始年を入力してください'),
-  first_month: z.number().int().min(1).max(12),
+  first_month: z
+    .number()
+    .int()
+    .min(1, '1〜12の範囲で指定してください')
+    .max(12, '1〜12の範囲で指定してください'),
   last_year: z.number().int().positive('終了年を入力してください'),
-  last_month: z.number().int().min(1).max(12),
+  last_month: z
+    .number()
+    .int()
+    .min(1, '1〜12の範囲で指定してください')
+    .max(12, '1〜12の範囲で指定してください'),
   method: z.number().int().positive('支払方法を選択してください'),
   amount_first: z.number().int().min(0, '金額は0以上'),
   amount_from_second: z.number().int().min(0, '金額は0以上'),
@@ -180,7 +188,12 @@ export default function LoanForm() {
                         min={1}
                         max={28}
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === '' ? 0 : Number(e.target.value)
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,8 +212,11 @@ export default function LoanForm() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -220,8 +236,11 @@ export default function LoanForm() {
                           min={1}
                           max={12}
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -242,8 +261,11 @@ export default function LoanForm() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
@@ -263,8 +285,11 @@ export default function LoanForm() {
                           min={1}
                           max={12}
                           {...field}
+                          value={field.value === 0 ? '' : field.value}
                           onChange={(e) =>
-                            field.onChange(Number(e.target.value))
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
                           }
                         />
                       </FormControl>
