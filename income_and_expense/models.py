@@ -30,7 +30,7 @@ class User(models.Model):
 class Account(models.Model):
     bank = models.ForeignKey(Bank, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    balance = models.PositiveIntegerField()
+    balance = models.IntegerField()
 
     class Meta:
         verbose_name = const_data.const.SHOWN_NAME_ACCOUNT
