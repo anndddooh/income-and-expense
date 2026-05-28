@@ -13,6 +13,7 @@ node_modules/
 package.json
 package-lock.json
 .claude/settings.local.json
+.coverage
 
 # Xcode / iOS
 ios/**/xcuserdata/
