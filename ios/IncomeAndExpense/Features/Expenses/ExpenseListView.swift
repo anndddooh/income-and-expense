@@ -10,14 +10,6 @@ struct ExpenseListView: View {
 
     var body: some View {
         List {
-            Section {
-                LabeledContent("月末残高(見込)") {
-                    Text(store.balance.yenString)
-                        .font(.body.monospacedDigit())
-                        .foregroundStyle(store.balance < 0 ? Palette.expense : .primary)
-                }
-            }
-
             Section("支出") {
                 if store.expenses.isEmpty {
                     PlaceholderRow(kind: store.isLoading
@@ -38,6 +30,18 @@ struct ExpenseListView: View {
                             Label("削除", systemImage: "trash")
                         }
                     }
+                }
+            }
+
+            Section {
+                LabeledContent("当月支出(\(store.expenses.count)件)") {
+                    Text(currentExpenseTotal.yenString)
+                        .font(.body.monospacedDigit())
+                }
+                LabeledContent("当月残高") {
+                    Text(store.balance.yenString)
+                        .font(.body.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(store.balance < 0 ? Palette.expense : .primary)
                 }
             }
 
@@ -125,6 +129,10 @@ struct ExpenseListView: View {
 
     private var monthKey: String {
         "\(monthStore.year)-\(monthStore.month)"
+    }
+
+    private var currentExpenseTotal: Int {
+        store.expenses.reduce(0) { $0 + $1.amount }
     }
 
     private func applyDefaults() async {
