@@ -10,13 +10,6 @@ struct IncomeListView: View {
 
     var body: some View {
         List {
-            Section {
-                LabeledContent("前月繰越") {
-                    Text(store.prevBalance.yenString)
-                        .font(.body.monospacedDigit())
-                }
-            }
-
             Section("収入") {
                 if store.incomes.isEmpty {
                     PlaceholderRow(kind: store.isLoading
@@ -37,6 +30,21 @@ struct IncomeListView: View {
                             Label("削除", systemImage: "trash")
                         }
                     }
+                }
+            }
+
+            Section {
+                LabeledContent("前月残高") {
+                    Text(store.prevBalance.yenString)
+                        .font(.body.monospacedDigit())
+                }
+                LabeledContent("当月収入(\(store.incomes.count)件)") {
+                    Text(currentIncomeTotal.yenString)
+                        .font(.body.monospacedDigit())
+                }
+                LabeledContent("合計") {
+                    Text((store.prevBalance + currentIncomeTotal).yenString)
+                        .font(.body.monospacedDigit().weight(.semibold))
                 }
             }
 
@@ -124,6 +132,10 @@ struct IncomeListView: View {
 
     private var monthKey: String {
         "\(monthStore.year)-\(monthStore.month)"
+    }
+
+    private var currentIncomeTotal: Int {
+        store.incomes.reduce(0) { $0 + $1.amount }
     }
 
     private func applyDefaults() async {
