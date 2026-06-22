@@ -7,7 +7,7 @@ from rest_framework import serializers
 from income_and_expense.models import (
     Account, DefaultExpense, DefaultExpenseMonth, DefaultIncome,
     DefaultIncomeMonth, Expense, ExpenseCategoryChoices, Income, Loan,
-    Method, StateChoices, TemplateExpense,
+    Method, Scenario, ScenarioItem, StateChoices, TemplateExpense,
 )
 
 
@@ -230,6 +230,49 @@ class DefaultExpenseSerializer(_DefaultInexSerializerBase):
             .values_list('month', flat=True)
         )
         return data
+
+
+class ScenarioItemSerializer(serializers.ModelSerializer):
+    category_label = serializers.SerializerMethodField()
+    method_name = serializers.CharField(source='method.name', read_only=True, default=None)
+
+    class Meta:
+        model = ScenarioItem
+        fields = [
+            'id', 'name', 'pay_day', 'method', 'method_name',
+            'amount', 'category', 'category_label',
+            'is_required', 'is_enabled', 'months',
+        ]
+
+    def get_category_label(self, obj):
+        return ExpenseCategoryChoices(obj.category).label
+
+    def validate_months(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError('months はリストで指定してください')
+        for m in value:
+            if not isinstance(m, int) or m < 1 or m > 12:
+                raise serializers.ValidationError('months は 1〜12 の整数で指定してください')
+        if len(set(value)) != len(value):
+            raise serializers.ValidationError('月が重複しています')
+        return sorted(value)
+
+
+class ScenarioSerializer(serializers.ModelSerializer):
+    items = ScenarioItemSerializer(many=True, read_only=True)
+    item_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Scenario
+        fields = [
+            'id', 'name', 'note',
+            'created_at', 'updated_at',
+            'items', 'item_count',
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_item_count(self, obj):
+        return obj.items.count()
 
 
 class TemplateExpenseSerializer(serializers.ModelSerializer):
