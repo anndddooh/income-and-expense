@@ -6,8 +6,8 @@ from rest_framework import serializers
 
 from income_and_expense.models import (
     Account, DefaultExpense, DefaultExpenseMonth, DefaultIncome,
-    DefaultIncomeMonth, Expense, Income, Loan, Method, StateChoices,
-    TemplateExpense,
+    DefaultIncomeMonth, Expense, ExpenseCategoryChoices, Income, Loan,
+    Method, StateChoices, TemplateExpense,
 )
 
 
@@ -207,13 +207,19 @@ class DefaultExpenseSerializer(_DefaultInexSerializerBase):
     month_model = DefaultExpenseMonth
     month_fk = 'def_exp'
 
+    category_label = serializers.SerializerMethodField()
+
     class Meta:
         model = DefaultExpense
         fields = [
             'id', 'name', 'pay_day', 'method', 'method_name',
             'account', 'amount', 'formed_amount',
             'state', 'state_label', 'months',
+            'category', 'category_label', 'is_required',
         ]
+
+    def get_category_label(self, obj):
+        return ExpenseCategoryChoices(obj.category).label
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
