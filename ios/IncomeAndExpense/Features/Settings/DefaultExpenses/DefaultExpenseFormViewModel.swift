@@ -9,6 +9,8 @@ final class DefaultExpenseFormViewModel {
     var amount: String = ""
     var state: InexState = .undecided
     var months: [Int] = []
+    var category: ExpenseCategory = .fixed
+    var isRequired: Bool = true
     var errorMessage: String? = nil
     var isSaving: Bool = false
 
@@ -25,6 +27,8 @@ final class DefaultExpenseFormViewModel {
             amount = String(item.amount)
             state = item.state
             months = item.months
+            category = item.category
+            isRequired = item.isRequired
         }
     }
 
@@ -55,7 +59,8 @@ final class DefaultExpenseFormViewModel {
 
         let input = DefaultExpenseInput(
             name: trimmed, payDay: payDay, method: methodID,
-            amount: amountInt, state: state, months: months.sorted()
+            amount: amountInt, state: state, months: months.sorted(),
+            category: category, isRequired: isRequired
         )
         do {
             if let original {
