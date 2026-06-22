@@ -30,6 +30,12 @@ struct DefaultExpenseFormView: View {
                             Text(state.label).tag(state)
                         }
                     }
+                    Picker("費目区分", selection: $viewModel.category) {
+                        ForEach(ExpenseCategory.allCases) { cat in
+                            Text(cat.label).tag(cat)
+                        }
+                    }
+                    Toggle("必須の支出", isOn: $viewModel.isRequired)
                 }
 
                 Section("対象月") {

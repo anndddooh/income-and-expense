@@ -66,15 +66,39 @@ struct DefaultExpenseListView: View {
                 StateBadge(state: item.state)
             }
             HStack(spacing: 6) {
-                Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
-                    .font(.caption).foregroundStyle(.secondary)
+                attributeBadge(item.categoryLabel, tint: categoryTint(item.category))
+                attributeBadge(
+                    item.isRequired ? "必須" : "任意",
+                    tint: item.isRequired ? .accentColor : .secondary
+                )
                 Spacer()
                 Text(item.amount.yenString)
                     .font(.caption.monospacedDigit())
             }
+            HStack(spacing: 6) {
+                Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Text(monthsLabel(item.months))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func attributeBadge(_ text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.medium))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(tint.opacity(0.15), in: Capsule())
+            .foregroundStyle(tint)
+    }
+
+    private func categoryTint(_ category: ExpenseCategory) -> Color {
+        switch category {
+        case .fixed: return .blue
+        case .variable: return .orange
+        case .oneTime: return .purple
         }
     }
 
