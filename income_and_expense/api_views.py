@@ -11,13 +11,13 @@ from rest_framework.response import Response
 
 from income_and_expense.models import (
     Account, DefaultExpense, DefaultExpenseMonth, DefaultIncome,
-    DefaultIncomeMonth, Expense, Income, Loan, Method, StateChoices,
-    TemplateExpense,
+    DefaultIncomeMonth, Expense, ExpenseCategoryChoices, Income, Loan,
+    Method, Scenario, ScenarioItem, StateChoices, TemplateExpense,
 )
 from income_and_expense.serializers import (
     AccountSerializer, DefaultExpenseSerializer, DefaultIncomeSerializer,
     ExpenseSerializer, IncomeSerializer, LoanSerializer, MethodSerializer,
-    TemplateExpenseSerializer,
+    ScenarioItemSerializer, ScenarioSerializer, TemplateExpenseSerializer,
 )
 
 
@@ -339,6 +339,171 @@ class MethodDoneAPIView(views.APIView):
         )
         updated = qs.update(state=StateChoices.DONE)
         return Response({'updated': updated})
+
+
+class ScenarioViewSet(viewsets.ModelViewSet):
+    serializer_class = ScenarioSerializer
+    queryset = Scenario.objects.prefetch_related('items__method').all()
+
+    @action(detail=True, methods=['post'], url_path='copy_from_defaults')
+    def copy_from_defaults(self, request, pk=None):
+        scenario = self.get_object()
+        if scenario.items.exists():
+            raise ValidationError(
+                "既に項目があるシナリオには初期化できません。"
+            )
+
+        for de in DefaultExpense.objects.all():
+            months = list(
+                DefaultExpenseMonth.objects
+                .filter(def_exp=de)
+                .order_by('month')
+                .values_list('month', flat=True)
+            )
+            ScenarioItem.objects.create(
+                scenario=scenario,
+                name=de.name,
+                pay_day=de.pay_day,
+                method=de.method,
+                amount=de.amount,
+                category=de.category,
+                is_required=de.is_required,
+                is_enabled=True,
+                months=months,
+            )
+
+        return Response(
+            ScenarioSerializer(scenario).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=['get'], url_path='summary')
+    def summary(self, request, pk=None):
+        scenario = self.get_object()
+        mode = request.query_params.get('mode', 'monthly')
+        month_arg = request.query_params.get('month')
+
+        # 月収/年収: DefaultIncomeから集計
+        monthly_income_by_month = {m: 0 for m in range(1, 13)}
+        for di in DefaultIncome.objects.all():
+            di_months = list(
+                DefaultIncomeMonth.objects
+                .filter(def_inc=di)
+                .values_list('month', flat=True)
+            )
+            for m in di_months:
+                monthly_income_by_month[m] += di.amount
+
+        # シナリオ項目を集計
+        items = list(scenario.items.all())
+        enabled_items = [i for i in items if i.is_enabled]
+
+        def _bucket_for_month(target_month):
+            fixed = 0
+            variable = 0
+            one_time = 0
+            required = 0
+            optional = 0
+            for it in enabled_items:
+                if it.months and target_month not in it.months:
+                    continue
+                amt = it.amount
+                if it.category == ExpenseCategoryChoices.FIXED:
+                    fixed += amt
+                elif it.category == ExpenseCategoryChoices.VARIABLE:
+                    variable += amt
+                elif it.category == ExpenseCategoryChoices.ONE_TIME:
+                    one_time += amt
+                if it.is_required:
+                    required += amt
+                else:
+                    optional += amt
+            return {
+                'fixed': fixed,
+                'variable': variable,
+                'one_time': one_time,
+                'total_expense': fixed + variable + one_time,
+                'required': required,
+                'optional': optional,
+            }
+
+        if mode == 'yearly':
+            yearly = {
+                'fixed': 0, 'variable': 0, 'one_time': 0,
+                'total_expense': 0, 'required': 0, 'optional': 0,
+            }
+            for m in range(1, 13):
+                b = _bucket_for_month(m)
+                for k in yearly:
+                    yearly[k] += b[k]
+            income_total = sum(monthly_income_by_month.values())
+            return Response({
+                'mode': 'yearly',
+                'income': income_total,
+                **yearly,
+                'balance': income_total - yearly['total_expense'],
+            })
+
+        # monthly
+        try:
+            m = int(month_arg) if month_arg else timezone.now().month
+        except (TypeError, ValueError):
+            raise ValidationError('month は整数で指定してください')
+        if m < 1 or m > 12:
+            raise ValidationError('month は1〜12で指定してください')
+
+        b = _bucket_for_month(m)
+        income = monthly_income_by_month.get(m, 0)
+        return Response({
+            'mode': 'monthly',
+            'month': m,
+            'income': income,
+            **b,
+            'balance': income - b['total_expense'],
+        })
+
+
+class ScenarioItemViewSet(viewsets.ModelViewSet):
+    serializer_class = ScenarioItemSerializer
+    queryset = ScenarioItem.objects.select_related('method').all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        scenario_id = self.request.query_params.get('scenario')
+        if scenario_id:
+            qs = qs.filter(scenario_id=scenario_id)
+        return qs
+
+
+class ExpenseHistoryAverageAPIView(views.APIView):
+    """過去N月の同名Expenseの平均額を返す(提案B用)。"""
+
+    def get(self, request):
+        name = request.query_params.get('name', '').strip()
+        try:
+            months = int(request.query_params.get('months', '3'))
+        except (TypeError, ValueError):
+            raise ValidationError('months は整数で指定してください')
+        if not name:
+            return Response({'name': '', 'months': months, 'average': 0, 'count': 0})
+        months = max(1, min(months, 24))
+
+        now = timezone.now()
+        end_first = datetime.date(now.year, now.month, 1)
+        start_first = end_first - relativedelta(months=months)
+        qs = Expense.objects.filter(
+            name=name,
+            pay_date__gte=start_first,
+            pay_date__lt=end_first,
+        )
+        amounts = list(qs.values_list('amount', flat=True))
+        avg = int(sum(amounts) / len(amounts)) if amounts else 0
+        return Response({
+            'name': name,
+            'months': months,
+            'average': avg,
+            'count': len(amounts),
+        })
 
 
 class TrendAPIView(views.APIView):

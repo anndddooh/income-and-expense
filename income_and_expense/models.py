@@ -331,6 +331,52 @@ class TemplateExpense(models.Model):
     state_info.short_description = const_data.const.SHOWN_NAME_STATE
 
 
+class Scenario(models.Model):
+    name = models.CharField(max_length=80)
+    note = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'シミュレーションシナリオ'
+        verbose_name_plural = 'シミュレーションシナリオ'
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return self.name
+
+
+class ScenarioItem(models.Model):
+    scenario = models.ForeignKey(
+        Scenario, on_delete=models.CASCADE, related_name='items'
+    )
+    name = models.CharField(max_length=50)
+    pay_day = models.PositiveIntegerField(validators=[
+        validators.MinValueValidator(1),
+        validators.MaxValueValidator(28),
+    ])
+    method = models.ForeignKey(Method, on_delete=models.PROTECT, null=True, blank=True)
+    amount = models.PositiveIntegerField()
+    category = models.IntegerField(
+        choices=ExpenseCategoryChoices.choices,
+        default=ExpenseCategoryChoices.FIXED,
+        verbose_name=const_data.const.SHOWN_NAME_CATEGORY,
+    )
+    is_required = models.BooleanField(
+        default=True,
+        verbose_name=const_data.const.SHOWN_NAME_REQUIRED_FLAG,
+    )
+    is_enabled = models.BooleanField(default=True)
+    months = models.JSONField(default=list)
+
+    class Meta:
+        verbose_name = 'シナリオ項目'
+        verbose_name_plural = 'シナリオ項目'
+
+    def __str__(self):
+        return "{0} / {1}".format(self.scenario, self.name)
+
+
 class Loan(models.Model):
     name = models.CharField(max_length=50, unique=True)
     pay_day = models.PositiveIntegerField(validators=[

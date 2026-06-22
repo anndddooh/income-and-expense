@@ -19,6 +19,8 @@ import LoanForm from '@/pages/LoanForm'
 import LoanList from '@/pages/LoanList'
 import Login from '@/pages/Login'
 import MethodRequire from '@/pages/MethodRequire'
+import ScenarioDetail from '@/pages/ScenarioDetail'
+import ScenarioList from '@/pages/ScenarioList'
 import Settings from '@/pages/Settings'
 
 const queryClient = new QueryClient()
@@ -83,6 +85,8 @@ export default function App() {
                 path="/settings/default-expenses/:id/edit"
                 element={<DefaultExpenseForm />}
               />
+              <Route path="/scenarios" element={<ScenarioList />} />
+              <Route path="/scenarios/:id" element={<ScenarioDetail />} />
             </Route>
           </Route>
         </Routes>
