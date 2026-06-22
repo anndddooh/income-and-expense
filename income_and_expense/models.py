@@ -70,6 +70,12 @@ class StateChoices(models.IntegerChoices):
     DONE = 2, const_data.const.SHOWN_NAME_DONE
 
 
+class ExpenseCategoryChoices(models.IntegerChoices):
+    FIXED = 1, const_data.const.SHOWN_NAME_FIXED_COST
+    VARIABLE = 2, const_data.const.SHOWN_NAME_VARIABLE_COST
+    ONE_TIME = 3, const_data.const.SHOWN_NAME_ONE_TIME
+
+
 class Expense(models.Model):
     name = models.CharField(max_length=50)
     pay_date = models.DateField('payment date')
@@ -135,6 +141,15 @@ class DefaultExpense(models.Model):
     method = models.ForeignKey(Method, on_delete=models.PROTECT)
     amount = models.PositiveIntegerField()
     state = models.IntegerField(choices=StateChoices.choices, default=StateChoices.UNDECIDED)
+    category = models.IntegerField(
+        choices=ExpenseCategoryChoices.choices,
+        default=ExpenseCategoryChoices.FIXED,
+        verbose_name=const_data.const.SHOWN_NAME_CATEGORY,
+    )
+    is_required = models.BooleanField(
+        default=True,
+        verbose_name=const_data.const.SHOWN_NAME_REQUIRED_FLAG,
+    )
 
     class Meta:
         verbose_name = (
@@ -160,6 +175,17 @@ class DefaultExpense(models.Model):
     def state_info(self):
         return (StateChoices(self.state).label)
     state_info.short_description = const_data.const.SHOWN_NAME_STATE
+
+    def category_info(self):
+        return ExpenseCategoryChoices(self.category).label
+    category_info.short_description = const_data.const.SHOWN_NAME_CATEGORY
+
+    def required_info(self):
+        return (
+            const_data.const.SHOWN_NAME_REQUIRED if self.is_required
+            else const_data.const.SHOWN_NAME_OPTIONAL
+        )
+    required_info.short_description = const_data.const.SHOWN_NAME_REQUIRED_FLAG
 
 
 class DefaultIncome(models.Model):

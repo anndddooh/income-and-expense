@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -73,6 +74,8 @@ export default function DefaultExpenseList() {
             <TableHeader>
               <TableRow>
                 <TableHead>名称</TableHead>
+                <TableHead>区分</TableHead>
+                <TableHead>必須</TableHead>
                 <TableHead>支払日</TableHead>
                 <TableHead>支払方法</TableHead>
                 <TableHead>口座</TableHead>
@@ -85,21 +88,21 @@ export default function DefaultExpenseList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
                     読み込み中...
                   </TableCell>
                 </TableRow>
               )}
               {error && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-destructive">
+                  <TableCell colSpan={10} className="text-center text-destructive">
                     エラー: {String(error)}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && !error && items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
                     データがありません
                   </TableCell>
                 </TableRow>
@@ -122,6 +125,14 @@ export default function DefaultExpenseList() {
                     className={`font-medium ${stateBarClass(it.state as State)}`}
                   >
                     {it.name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{it.category_label}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={it.is_required ? 'default' : 'secondary'}>
+                      {it.is_required ? '必須' : '任意'}
+                    </Badge>
                   </TableCell>
                   <TableCell>{it.pay_day}</TableCell>
                   <TableCell>{it.method_name}</TableCell>

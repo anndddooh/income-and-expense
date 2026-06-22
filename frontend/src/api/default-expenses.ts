@@ -1,6 +1,13 @@
 import { api } from './client'
 import type { StateValue } from './types'
 
+export type ExpenseCategoryValue = 1 | 2 | 3
+export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategoryValue, string> = {
+  1: '固定費',
+  2: '変動費',
+  3: '単発',
+}
+
 export type DefaultExpense = {
   id: number
   name: string
@@ -13,6 +20,9 @@ export type DefaultExpense = {
   state: StateValue
   state_label: string
   months: number[]
+  category: ExpenseCategoryValue
+  category_label: string
+  is_required: boolean
 }
 
 export type DefaultExpenseInput = {
@@ -22,6 +32,8 @@ export type DefaultExpenseInput = {
   amount: number
   state: StateValue
   months: number[]
+  category: ExpenseCategoryValue
+  is_required: boolean
 }
 
 export const fetchDefaultExpenses = async () => {
