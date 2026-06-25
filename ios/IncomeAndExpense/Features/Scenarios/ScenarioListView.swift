@@ -17,7 +17,9 @@ struct ScenarioListView: View {
                     : .empty(icon: "flask", message: "シナリオがありません"))
             }
             ForEach(store.items) { item in
-                NavigationLink(value: item) {
+                NavigationLink {
+                    ScenarioDetailView(scenarioID: item.id, initialName: item.name)
+                } label: {
                     row(item)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -41,9 +43,6 @@ struct ScenarioListView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingNewForm = true } label: { Image(systemName: "plus") }
             }
-        }
-        .navigationDestination(for: Scenario.self) { scenario in
-            ScenarioDetailView(scenarioID: scenario.id, initialName: scenario.name)
         }
         .sheet(isPresented: $showingNewForm) {
             newScenarioSheet
