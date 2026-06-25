@@ -395,7 +395,7 @@ export default function ScenarioDetail() {
                         ))}
                       </Pie>
                       <ChartTooltip
-                        formatter={(v: number) => `¥${v.toLocaleString()}`}
+                        formatter={(v) => `¥${Number(v).toLocaleString()}`}
                       />
                     </PieChart>
                   </ResponsiveContainer>
