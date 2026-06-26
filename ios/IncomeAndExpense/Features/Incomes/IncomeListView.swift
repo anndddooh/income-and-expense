@@ -2,6 +2,7 @@ import SwiftUI
 
 struct IncomeListView: View {
     @State private var store = IncomeStore()
+    @State private var stateFilter = StateFilterStorage(key: "inex.incomeList.stateFilter")
     @State private var showingNewForm = false
     @State private var editingIncome: Income?
     @State private var showingDefaultsConfirm = false
@@ -9,14 +10,26 @@ struct IncomeListView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
+        @Bindable var stateFilter = stateFilter
         List {
+            Section {
+                StateFilterChips(selected: $stateFilter.selected)
+            }
+
             Section("収入") {
                 if store.incomes.isEmpty {
                     PlaceholderRow(kind: store.isLoading
                         ? .loading
                         : .empty(icon: "tray", message: "収入の記録がありません"))
+                } else if visibleIncomes.isEmpty {
+                    PlaceholderRow(
+                        kind: .empty(
+                            icon: "line.3.horizontal.decrease.circle",
+                            message: "フィルター条件に一致する収入はありません"
+                        )
+                    )
                 }
-                ForEach(store.incomes) { income in
+                ForEach(visibleIncomes) { income in
                     Button {
                         editingIncome = income
                     } label: {
@@ -136,6 +149,10 @@ struct IncomeListView: View {
 
     private var currentIncomeTotal: Int {
         store.incomes.reduce(0) { $0 + $1.amount }
+    }
+
+    private var visibleIncomes: [Income] {
+        store.incomes.filter { stateFilter.selected.contains($0.state) }
     }
 
     private func applyDefaults() async {
