@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExpenseListView: View {
     @State private var store = ExpenseStore()
+    @State private var stateFilter = StateFilterStorage(key: "inex.expenseList.stateFilter")
     @State private var showingNewForm = false
     @State private var editingExpense: Expense?
     @State private var showingDefaultsConfirm = false
@@ -9,14 +10,26 @@ struct ExpenseListView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
+        @Bindable var stateFilter = stateFilter
         List {
+            Section {
+                StateFilterChips(selected: $stateFilter.selected)
+            }
+
             Section("支出") {
                 if store.expenses.isEmpty {
                     PlaceholderRow(kind: store.isLoading
                         ? .loading
                         : .empty(icon: "tray", message: "支出の記録がありません"))
+                } else if visibleExpenses.isEmpty {
+                    PlaceholderRow(
+                        kind: .empty(
+                            icon: "line.3.horizontal.decrease.circle",
+                            message: "フィルター条件に一致する支出はありません"
+                        )
+                    )
                 }
-                ForEach(store.expenses) { expense in
+                ForEach(visibleExpenses) { expense in
                     Button {
                         editingExpense = expense
                     } label: {
@@ -133,6 +146,10 @@ struct ExpenseListView: View {
 
     private var currentExpenseTotal: Int {
         store.expenses.reduce(0) { $0 + $1.amount }
+    }
+
+    private var visibleExpenses: [Expense] {
+        store.expenses.filter { stateFilter.selected.contains($0.state) }
     }
 
     private func applyDefaults() async {
