@@ -1,0 +1,8 @@
+#include "Shared.xcconfig"
+
+// Dokku 上の検証用 Backend
+API_SCHEME = https
+API_HOST = income-and-expense-staging.167.172.65.18.nip.io
+
+PRODUCT_BUNDLE_IDENTIFIER = com.ando.IncomeAndExpense.staging
+BUNDLE_DISPLAY_NAME_SUFFIX = (Staging)

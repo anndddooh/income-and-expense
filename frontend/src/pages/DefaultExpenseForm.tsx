@@ -29,6 +29,7 @@ import {
   createDefaultExpense,
   fetchDefaultExpense,
   updateDefaultExpense,
+  type ExpenseCategoryValue,
 } from '@/api/default-expenses'
 import { fetchMethods } from '@/api/methods'
 
@@ -43,6 +44,8 @@ const schema = z.object({
   amount: z.number().int().min(0, '金額は0以上で入力してください'),
   state: z.number().int().min(0).max(2),
   months: z.array(z.number().int().min(1).max(12)),
+  category: z.number().int().min(1).max(3),
+  is_required: z.boolean(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -53,9 +56,18 @@ const STATES = [
   { value: '2', label: '完了' },
 ]
 
+const CATEGORIES = [
+  { value: '1', label: '固定費' },
+  { value: '2', label: '変動費' },
+  { value: '3', label: '単発' },
+]
+
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
 
-const FIELDS = ['name', 'pay_day', 'method', 'amount', 'state', 'months'] as const
+const FIELDS = [
+  'name', 'pay_day', 'method', 'amount', 'state', 'months',
+  'category', 'is_required',
+] as const
 
 export default function DefaultExpenseForm() {
   const { id } = useParams<{ id?: string }>()
@@ -73,6 +85,8 @@ export default function DefaultExpenseForm() {
       amount: 0,
       state: 0,
       months: [],
+      category: 1,
+      is_required: true,
     },
   })
 
@@ -95,6 +109,8 @@ export default function DefaultExpenseForm() {
         amount: existing.amount,
         state: existing.state,
         months: existing.months,
+        category: existing.category,
+        is_required: existing.is_required,
       })
     }
   }, [existing, methods.length, form])
@@ -107,7 +123,11 @@ export default function DefaultExpenseForm() {
 
   const mut = useMutation({
     mutationFn: (values: FormValues) => {
-      const payload = { ...values, state: values.state as 0 | 1 | 2 }
+      const payload = {
+        ...values,
+        state: values.state as 0 | 1 | 2,
+        category: values.category as ExpenseCategoryValue,
+      }
       return isEdit
         ? updateDefaultExpense(itemId!, payload)
         : createDefaultExpense(payload)
@@ -243,6 +263,57 @@ export default function DefaultExpenseForm() {
                             {s.label}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>費目区分</FormLabel>
+                    <Select
+                      value={String(field.value)}
+                      onValueChange={(v) => field.onChange(Number(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CATEGORIES.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="is_required"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>必須／任意</FormLabel>
+                    <Select
+                      value={field.value ? 'required' : 'optional'}
+                      onValueChange={(v) => field.onChange(v === 'required')}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="required">必須</SelectItem>
+                        <SelectItem value="optional">任意</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

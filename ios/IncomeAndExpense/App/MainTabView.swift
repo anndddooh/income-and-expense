@@ -45,6 +45,9 @@ struct MainTabView: View {
                     NavigationLink("口座別必要額") { AccountRequireView() }
                     NavigationLink("支払方法別必要額") { MethodRequireView() }
                 }
+                Section("分析") {
+                    NavigationLink("シミュレーター") { ScenarioListView() }
+                }
                 Section("設定") {
                     NavigationLink("設定") { SettingsView() }
                 }

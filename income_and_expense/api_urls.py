@@ -20,6 +20,16 @@ router.register(
     api_views.DefaultExpenseViewSet,
     basename='default-expense',
 )
+router.register(
+    r'scenarios',
+    api_views.ScenarioViewSet,
+    basename='scenario',
+)
+router.register(
+    r'scenario_items',
+    api_views.ScenarioItemViewSet,
+    basename='scenario-item',
+)
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -36,6 +46,11 @@ urlpatterns = [
     ),
     path('balance/', api_views.BalanceAPIView.as_view(), name='balance'),
     path('trends/', api_views.TrendAPIView.as_view(), name='trends'),
+    path(
+        'expenses/history_average/',
+        api_views.ExpenseHistoryAverageAPIView.as_view(),
+        name='expense-history-average',
+    ),
     path(
         'account_require/',
         api_views.AccountRequireAPIView.as_view(),

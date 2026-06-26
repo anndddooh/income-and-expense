@@ -5,6 +5,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { StateBadge, stateBarClass, type State } from '@/components/StateIndicator'
+import { StateFilterChips } from '@/components/StateFilterChips'
+import { useStoredStateFilter } from '@/hooks/useStoredStateFilter'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +49,13 @@ export default function IncomeList() {
   })
   const incomes = data?.results ?? []
   const prevBalance = data?.prev_balance ?? 0
+
+  const [stateFilter, setStateFilter] = useStoredStateFilter(
+    'inex.incomeList.stateFilter',
+  )
+  const visibleIncomes = incomes.filter((i) =>
+    stateFilter.includes(i.state as State),
+  )
 
   const delMut = useMutation({
     mutationFn: (id: number) => deleteIncome(id),
@@ -96,6 +105,10 @@ export default function IncomeList() {
         }
       />
 
+      <div className="mb-3">
+        <StateFilterChips selected={stateFilter} onChange={setStateFilter} />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -132,7 +145,14 @@ export default function IncomeList() {
                   </TableCell>
                 </TableRow>
               )}
-              {incomes.map((i) => (
+              {!isLoading && !error && incomes.length > 0 && visibleIncomes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    フィルター条件に一致する収入はありません
+                  </TableCell>
+                </TableRow>
+              )}
+              {visibleIncomes.map((i) => (
                 <TableRow
                   key={i.id}
                   tabIndex={0}

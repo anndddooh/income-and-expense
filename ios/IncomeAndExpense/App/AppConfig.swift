@@ -2,10 +2,15 @@ import Foundation
 
 enum AppConfig {
     static let baseURL: URL = {
-        #if DEBUG
-        return URL(string: "http://localhost:8000/api")!
-        #else
-        return URL(string: "https://income-and-expense.167.172.65.18.nip.io/api")!
-        #endif
+        guard
+            let scheme = Bundle.main.object(forInfoDictionaryKey: "API_SCHEME") as? String,
+            !scheme.isEmpty,
+            let host = Bundle.main.object(forInfoDictionaryKey: "API_HOST") as? String,
+            !host.isEmpty,
+            let url = URL(string: "\(scheme)://\(host)/api")
+        else {
+            fatalError("API_SCHEME / API_HOST が Info.plist (xcconfig) に未設定です")
+        }
+        return url
     }()
 }

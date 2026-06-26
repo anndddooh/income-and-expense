@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  FlaskConical,
   LayoutDashboard,
   Landmark,
   LogOut,
@@ -198,6 +199,25 @@ function AppLayoutContent() {
                     </SidebarMenuItem>
                   )
                 })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>分析</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.startsWith('/scenarios')}
+                    tooltip="シミュレーター"
+                  >
+                    <Link to="/scenarios" onClick={closeMobileSidebar}>
+                      <FlaskConical className="size-4" />
+                      <span>シミュレーター</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

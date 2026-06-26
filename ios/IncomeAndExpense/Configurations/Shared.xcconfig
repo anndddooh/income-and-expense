@@ -1,0 +1,6 @@
+// Shared xcconfig — applied to all Build Configurations
+// 環境別の値は Debug/Staging/Release.xcconfig で定義する
+
+// Display Name は xcconfig 側で組み立てて Info.plist の
+// CFBundleDisplayName($(BUNDLE_DISPLAY_NAME)) から参照する
+BUNDLE_DISPLAY_NAME = INEX$(BUNDLE_DISPLAY_NAME_SUFFIX)

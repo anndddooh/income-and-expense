@@ -2,6 +2,7 @@ import SwiftUI
 
 struct IncomeListView: View {
     @State private var store = IncomeStore()
+    @State private var stateFilter = StateFilterStorage(key: "inex.incomeList.stateFilter")
     @State private var showingNewForm = false
     @State private var editingIncome: Income?
     @State private var showingDefaultsConfirm = false
@@ -9,12 +10,10 @@ struct IncomeListView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
+        @Bindable var stateFilter = stateFilter
         List {
             Section {
-                LabeledContent("前月繰越") {
-                    Text(store.prevBalance.yenString)
-                        .font(.body.monospacedDigit())
-                }
+                StateFilterChips(selected: $stateFilter.selected)
             }
 
             Section("収入") {
@@ -22,8 +21,15 @@ struct IncomeListView: View {
                     PlaceholderRow(kind: store.isLoading
                         ? .loading
                         : .empty(icon: "tray", message: "収入の記録がありません"))
+                } else if visibleIncomes.isEmpty {
+                    PlaceholderRow(
+                        kind: .empty(
+                            icon: "line.3.horizontal.decrease.circle",
+                            message: "フィルター条件に一致する収入はありません"
+                        )
+                    )
                 }
-                ForEach(store.incomes) { income in
+                ForEach(visibleIncomes) { income in
                     Button {
                         editingIncome = income
                     } label: {
@@ -37,6 +43,21 @@ struct IncomeListView: View {
                             Label("削除", systemImage: "trash")
                         }
                     }
+                }
+            }
+
+            Section {
+                LabeledContent("前月残高") {
+                    Text(store.prevBalance.yenString)
+                        .font(.body.monospacedDigit())
+                }
+                LabeledContent("当月収入(\(store.incomes.count)件)") {
+                    Text(currentIncomeTotal.yenString)
+                        .font(.body.monospacedDigit())
+                }
+                LabeledContent("合計") {
+                    Text((store.prevBalance + currentIncomeTotal).yenString)
+                        .font(.body.monospacedDigit().weight(.semibold))
                 }
             }
 
@@ -124,6 +145,14 @@ struct IncomeListView: View {
 
     private var monthKey: String {
         "\(monthStore.year)-\(monthStore.month)"
+    }
+
+    private var currentIncomeTotal: Int {
+        store.incomes.reduce(0) { $0 + $1.amount }
+    }
+
+    private var visibleIncomes: [Income] {
+        store.incomes.filter { stateFilter.selected.contains($0.state) }
     }
 
     private func applyDefaults() async {

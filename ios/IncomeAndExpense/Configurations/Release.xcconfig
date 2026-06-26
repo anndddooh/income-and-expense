@@ -1,0 +1,8 @@
+#include "Shared.xcconfig"
+
+// 本番 Backend
+API_SCHEME = https
+API_HOST = income-and-expense.167.172.65.18.nip.io
+
+PRODUCT_BUNDLE_IDENTIFIER = com.ando.IncomeAndExpense
+BUNDLE_DISPLAY_NAME_SUFFIX =
