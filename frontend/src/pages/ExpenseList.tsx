@@ -5,6 +5,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { StateBadge, stateBarClass, type State } from '@/components/StateIndicator'
+import { StateFilterChips } from '@/components/StateFilterChips'
+import { useStoredStateFilter } from '@/hooks/useStoredStateFilter'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +49,13 @@ export default function ExpenseList() {
   })
   const items = data?.results ?? []
   const balance = data?.balance ?? 0
+
+  const [stateFilter, setStateFilter] = useStoredStateFilter(
+    'inex.expenseList.stateFilter',
+  )
+  const visibleItems = items.filter((i) =>
+    stateFilter.includes(i.state as State),
+  )
 
   const delMut = useMutation({
     mutationFn: (id: number) => deleteExpense(id),
@@ -96,6 +105,10 @@ export default function ExpenseList() {
         }
       />
 
+      <div className="mb-3">
+        <StateFilterChips selected={stateFilter} onChange={setStateFilter} />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -132,7 +145,14 @@ export default function ExpenseList() {
                   </TableCell>
                 </TableRow>
               )}
-              {items.map((i) => (
+              {!isLoading && !error && items.length > 0 && visibleItems.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    フィルター条件に一致する支出はありません
+                  </TableCell>
+                </TableRow>
+              )}
+              {visibleItems.map((i) => (
                 <TableRow
                   key={i.id}
                   tabIndex={0}
