@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, RefreshCcw, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
-import { StateBadge, stateBarClass, type State } from '@/components/StateIndicator'
+import { StateBadge, type State } from '@/components/StateIndicator'
 import { StateFilterChips } from '@/components/StateFilterChips'
 import { useStoredStateFilter } from '@/hooks/useStoredStateFilter'
 import {
@@ -17,8 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -27,6 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { pillOutline, pillPrimary, tableCard } from '@/lib/ui'
+import { dayOf } from '@/util/date'
 import {
   addDefaultIncomes,
   deleteIncome,
@@ -81,131 +81,151 @@ export default function IncomeList() {
   return (
     <>
       <PageHeader
-        title="収入一覧"
-        description={`${year}年${month}月`}
+        title="収入"
+        description={`${year}年${month}月 · ${incomes.length}件 · ¥${total.toLocaleString()}`}
         actions={
           <>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              type="button"
+              className={pillOutline}
               onClick={() => addDefMut.mutate()}
               disabled={addDefMut.isPending}
             >
-              <RefreshCcw className="size-4" />
-              デフォルトから追加
-            </Button>
-            <Button
-              size="sm"
+              ⟳ デフォルトから追加
+            </button>
+            <button
+              type="button"
+              className={pillPrimary}
               onClick={() => navigate(`/incomes/${year}/${month}/new`)}
             >
-              <Plus className="size-4" />
-              新規作成
-            </Button>
+              ＋ 収入を追加
+            </button>
           </>
         }
       />
 
-      <div className="mb-3">
+      <div className="mb-3.5">
         <StateFilterChips selected={stateFilter} onChange={setStateFilter} />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+      <div className={tableCard}>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-[12px] font-bold text-muted-foreground">
+                支払日
+              </TableHead>
+              <TableHead className="text-[12px] font-bold text-muted-foreground">
+                名称
+              </TableHead>
+              <TableHead className="text-[12px] font-bold text-muted-foreground">
+                支払方法
+              </TableHead>
+              <TableHead className="text-[12px] font-bold text-muted-foreground">
+                口座
+              </TableHead>
+              <TableHead className="text-right text-[12px] font-bold text-muted-foreground">
+                金額
+              </TableHead>
+              <TableHead className="text-[12px] font-bold text-muted-foreground">
+                状態
+              </TableHead>
+              <TableHead className="w-14 text-right text-[12px] font-bold text-muted-foreground">
+                操作
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
               <TableRow>
-                <TableHead>支払日</TableHead>
-                <TableHead>名称</TableHead>
-                <TableHead>支払方法</TableHead>
-                <TableHead>口座</TableHead>
-                <TableHead className="text-right">金額</TableHead>
-                <TableHead>状態</TableHead>
-                <TableHead className="w-16 text-right">操作</TableHead>
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  読み込み中...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    読み込み中...
-                  </TableCell>
-                </TableRow>
-              )}
-              {error && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-destructive">
-                    エラー: {String(error)}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && !error && incomes.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    データがありません
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && !error && incomes.length > 0 && visibleIncomes.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    フィルター条件に一致する収入はありません
-                  </TableCell>
-                </TableRow>
-              )}
-              {visibleIncomes.map((i) => (
-                <TableRow
-                  key={i.id}
-                  tabIndex={0}
-                  className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() =>
+            )}
+            {error && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-destructive">
+                  エラー: {String(error)}
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !error && incomes.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  データがありません
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !error && incomes.length > 0 && visibleIncomes.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  フィルター条件に一致する収入はありません
+                </TableCell>
+              </TableRow>
+            )}
+            {visibleIncomes.map((i) => (
+              <TableRow
+                key={i.id}
+                tabIndex={0}
+                className="cursor-pointer border-row-separator text-[13.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() =>
+                  navigate(`/incomes/${year}/${month}/${i.id}/edit`)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
                     navigate(`/incomes/${year}/${month}/${i.id}/edit`)
                   }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      navigate(`/incomes/${year}/${month}/${i.id}/edit`)
-                    }
-                  }}
+                }}
+              >
+                <TableCell className="tabular-nums text-muted-foreground-2">
+                  {dayOf(i.pay_date)}
+                </TableCell>
+                <TableCell className="font-bold">{i.name}</TableCell>
+                <TableCell>{i.method_name}</TableCell>
+                <TableCell className="text-[13px] text-muted-foreground">
+                  {i.account.user} / {i.account.bank}
+                </TableCell>
+                <TableCell
+                  className="text-right font-bold tabular-nums"
+                  style={{ color: 'var(--income)' }}
                 >
-                  <TableCell
-                    className={`tabular-nums ${stateBarClass(i.state as State)}`}
+                  {i.formed_amount}
+                </TableCell>
+                <TableCell>
+                  <StateBadge state={i.state as State} label={i.state_label} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDeleting(i)
+                    }}
+                    aria-label="削除"
+                    className="inline-flex size-7 items-center justify-center rounded-md transition-colors hover:bg-destructive/10"
                   >
-                    {i.pay_date}
-                  </TableCell>
-                  <TableCell className="font-medium">{i.name}</TableCell>
-                  <TableCell>{i.method_name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {i.account.user} / {i.account.bank}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {i.formed_amount}
-                  </TableCell>
-                  <TableCell>
-                    <StateBadge state={i.state as State} label={i.state_label} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDeleting(i)
-                      }}
-                      aria-label="削除"
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-        <div>前月残高: <span className="font-semibold text-foreground tabular-nums">¥{prevBalance.toLocaleString()}</span></div>
-        <div>当月収入: <span className="font-semibold text-foreground tabular-nums">¥{total.toLocaleString()}</span>（{incomes.length}件）</div>
-        <div>合計: <span className="font-semibold text-foreground tabular-nums">¥{(prevBalance + total).toLocaleString()}</span></div>
+                    <Trash2 className="size-[15px] text-destructive" />
+                  </button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="flex justify-end gap-7 bg-footer-bg px-[22px] py-3.5 text-[13px] text-muted-foreground">
+          <span>
+            当月収入{' '}
+            <span className="font-extrabold text-foreground tabular-nums">
+              ¥{total.toLocaleString()}
+            </span>
+          </span>
+          <span>
+            前月残高{' '}
+            <span className="font-extrabold text-foreground tabular-nums">
+              ¥{prevBalance.toLocaleString()}
+            </span>
+          </span>
+        </div>
       </div>
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>

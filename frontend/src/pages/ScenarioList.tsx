@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
+import { pillPrimary, tableCard } from '@/lib/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +16,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -88,25 +88,27 @@ export default function ScenarioList() {
     <>
       <PageHeader
         title="シミュレーター"
-        description="支出シナリオを作って月収/年収との収支を試算する"
+        description="支出シナリオを作って月収・年収との収支を試算する"
         actions={
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="size-4" />
-            新規作成
-          </Button>
+          <button
+            type="button"
+            className={pillPrimary}
+            onClick={() => setShowCreate(true)}
+          >
+            ＋ 新しいシナリオ
+          </button>
         }
       />
 
-      <Card>
-        <CardContent className="p-0">
+      <div className={tableCard}>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>名称</TableHead>
-                <TableHead>備考</TableHead>
-                <TableHead className="text-right">項目数</TableHead>
-                <TableHead>更新</TableHead>
-                <TableHead className="w-16 text-right">操作</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-[12px] font-bold text-muted-foreground">名称</TableHead>
+                <TableHead className="text-[12px] font-bold text-muted-foreground">備考</TableHead>
+                <TableHead className="text-right text-[12px] font-bold text-muted-foreground">項目数</TableHead>
+                <TableHead className="text-[12px] font-bold text-muted-foreground">更新</TableHead>
+                <TableHead className="w-14 text-right text-[12px] font-bold text-muted-foreground">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -128,41 +130,40 @@ export default function ScenarioList() {
                 <TableRow
                   key={it.id}
                   tabIndex={0}
-                  className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="cursor-pointer border-row-separator text-[13.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => navigate(`/scenarios/${it.id}`)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') navigate(`/scenarios/${it.id}`)
                   }}
                 >
-                  <TableCell className="font-medium">{it.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                  <TableCell className="font-bold">{it.name}</TableCell>
+                  <TableCell className="max-w-xs truncate text-[13px] text-muted-foreground">
                     {it.note || '-'}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {it.item_count}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-[13px] text-muted-foreground tabular-nums">
                     {new Date(it.updated_at).toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="icon"
-                      variant="ghost"
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         setDeleting(it)
                       }}
                       aria-label="削除"
+                      className="inline-flex size-7 items-center justify-center rounded-md transition-colors hover:bg-destructive/10"
                     >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                      <Trash2 className="size-[15px] text-destructive" />
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+      </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
