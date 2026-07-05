@@ -4,8 +4,6 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { login } from '@/api/auth'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -15,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { card, fieldLabel, pillPrimary } from '@/lib/ui'
 import { setTokens } from '@/lib/auth'
 
 const schema = z.object({
@@ -49,65 +48,76 @@ export default function Login() {
   })
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <img src="/icon.png" alt="INEX" className="h-6 w-auto" />
-            INEX にログイン
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              className="space-y-4"
-              onSubmit={form.handleSubmit((v) => {
-                form.clearErrors('root')
-                mut.mutate(v)
-              })}
-            >
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ユーザー名</FormLabel>
-                    <FormControl>
-                      <Input autoComplete="username" autoFocus {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>パスワード</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        autoComplete="current-password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {form.formState.errors.root && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.root.message}
-                </p>
+    <div className="flex min-h-svh items-center justify-center bg-background p-4">
+      <div className={`${card} w-full max-w-[380px] p-[30px]`}>
+        <div className="mb-6 flex flex-col items-center gap-2.5">
+          <span className="flex size-11 items-center justify-center rounded-[13px] bg-primary text-[21px] font-extrabold text-primary-foreground">
+            家
+          </span>
+          <div className="text-[18px] font-extrabold">INEX にログイン</div>
+          <div className="text-[12.5px] text-muted-foreground">
+            わが家の家計簿へおかえりなさい
+          </div>
+        </div>
+        <Form {...form}>
+          <form
+            className="grid gap-3.5"
+            onSubmit={form.handleSubmit((v) => {
+              form.clearErrors('root')
+              mut.mutate(v)
+            })}
+          >
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={fieldLabel}>ユーザー名</FormLabel>
+                  <FormControl>
+                    <Input
+                      autoComplete="username"
+                      autoFocus
+                      className="h-[42px] rounded-input bg-white"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <Button type="submit" className="w-full" disabled={mut.isPending}>
-                {mut.isPending ? 'ログイン中...' : 'ログイン'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={fieldLabel}>パスワード</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      className="h-[42px] rounded-input bg-white"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.formState.errors.root && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.root.message}
+              </p>
+            )}
+            <button
+              type="submit"
+              className={`${pillPrimary} mt-1 h-11 w-full`}
+              disabled={mut.isPending}
+            >
+              {mut.isPending ? 'ログイン中...' : 'ログイン'}
+            </button>
+          </form>
+        </Form>
+      </div>
     </div>
   )
 }

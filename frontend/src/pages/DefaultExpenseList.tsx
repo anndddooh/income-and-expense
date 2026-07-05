@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
-import { StateBadge, stateBarClass, type State } from '@/components/StateIndicator'
+import { StateBadge, type State } from '@/components/StateIndicator'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,8 +16,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -26,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { pillPrimary, tableCard } from '@/lib/ui'
 import {
   deleteDefaultExpense,
   fetchDefaultExpenses,
@@ -58,18 +57,17 @@ export default function DefaultExpenseList() {
         title="デフォルト支出"
         description="毎月自動で追加する支出のテンプレート"
         actions={
-          <Button
-            size="sm"
+          <button
+            type="button"
+            className={pillPrimary}
             onClick={() => navigate('/settings/default-expenses/new')}
           >
-            <Plus className="size-4" />
-            新規作成
-          </Button>
+            ＋ 新規作成
+          </button>
         }
       />
 
-      <Card>
-        <CardContent className="p-0">
+      <div className={tableCard}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -121,11 +119,7 @@ export default function DefaultExpenseList() {
                     }
                   }}
                 >
-                  <TableCell
-                    className={`font-medium ${stateBarClass(it.state as State)}`}
-                  >
-                    {it.name}
-                  </TableCell>
+                  <TableCell className="font-bold">{it.name}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{it.category_label}</Badge>
                   </TableCell>
@@ -154,24 +148,23 @@ export default function DefaultExpenseList() {
                     />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="icon"
-                      variant="ghost"
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         setDeleting(it)
                       }}
                       aria-label="削除"
+                      className="inline-flex size-7 items-center justify-center rounded-md transition-colors hover:bg-destructive/10"
                     >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                      <Trash2 className="size-[15px] text-destructive" />
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+      </div>
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
