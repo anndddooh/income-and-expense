@@ -1,19 +1,4 @@
-import {
-  BadgeDollarSign,
-  CalendarCheck,
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
-  FlaskConical,
-  LayoutDashboard,
-  Landmark,
-  LogOut,
-  PiggyBank,
-  ReceiptText,
-  Settings,
-  Wallet,
-} from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Settings as SettingsIcon } from 'lucide-react'
 import {
   Link,
   Outlet,
@@ -21,8 +6,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { clearTokens } from '@/lib/auth'
+import { cn } from '@/lib/utils'
 import {
   Popover,
   PopoverContent,
@@ -35,74 +19,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar'
 import { todayYearMonth } from '@/util/date'
 
 type NavItem = {
   label: string
-  path: string // '/incomes' or '' (dashboard)
-  icon: ReactNode
-  requiresMonth: boolean
+  chevron?: boolean
+  to: (year: number, month: number) => string
+  match: (pathname: string) => boolean
 }
 
-const MAIN_NAV: NavItem[] = [
+const NAV: NavItem[] = [
   {
-    label: 'ダッシュボード',
-    path: '/dashboard',
-    icon: <LayoutDashboard className="size-4" />,
-    requiresMonth: true,
+    label: 'ホーム',
+    to: (y, m) => `/dashboard/${y}/${m}`,
+    match: (p) => p === '/' || p.startsWith('/dashboard'),
   },
   {
     label: '収入',
-    path: '/incomes',
-    icon: <PiggyBank className="size-4" />,
-    requiresMonth: true,
+    to: (y, m) => `/incomes/${y}/${m}`,
+    match: (p) => p.startsWith('/incomes'),
   },
   {
     label: '支出',
-    path: '/expenses',
-    icon: <ReceiptText className="size-4" />,
-    requiresMonth: true,
+    to: (y, m) => `/expenses/${y}/${m}`,
+    match: (p) => p.startsWith('/expenses'),
   },
   {
     label: '残高',
-    path: '/balance',
-    icon: <Wallet className="size-4" />,
-    requiresMonth: true,
+    to: (y, m) => `/balance/${y}/${m}`,
+    match: (p) => p.startsWith('/balance'),
   },
   {
     label: 'ローン',
-    path: '/loans',
-    icon: <Landmark className="size-4" />,
-    requiresMonth: true,
+    to: (y, m) => `/loans/${y}/${m}`,
+    match: (p) => p.startsWith('/loans'),
   },
   {
-    label: '口座別必要額',
-    path: '/account_require',
-    icon: <CreditCard className="size-4" />,
-    requiresMonth: true,
+    label: '必要額',
+    chevron: true,
+    to: (y, m) => `/requires/${y}/${m}`,
+    match: (p) =>
+      p.startsWith('/requires') ||
+      p.startsWith('/account_require') ||
+      p.startsWith('/method_require'),
   },
   {
-    label: '支払方法別必要額',
-    path: '/method_require',
-    icon: <BadgeDollarSign className="size-4" />,
-    requiresMonth: true,
+    label: 'シミュレーター',
+    to: () => '/scenarios',
+    match: (p) => p.startsWith('/scenarios'),
   },
 ]
 
@@ -120,26 +84,15 @@ const YEAR_OPTIONS = Array.from({ length: 101 }, (_, i) => CURRENT_YEAR - 50 + i
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
 
 export default function AppLayout() {
-  return (
-    <SidebarProvider>
-      <AppLayoutContent />
-    </SidebarProvider>
-  )
-}
-
-function AppLayoutContent() {
   const location = useLocation()
   const navigate = useNavigate()
   const { year, month } = useCurrentYearMonth()
-  const { isMobile, setOpenMobile } = useSidebar()
-
-  const closeMobileSidebar = () => {
-    if (isMobile) setOpenMobile(false)
-  }
 
   const seg = location.pathname.split('/').filter(Boolean)
   const currentBase = seg[0] ? `/${seg[0]}` : '/dashboard'
-  const isMonthScoped = MAIN_NAV.some((n) => n.path === currentBase)
+  const isMonthScoped = NAV.some(
+    (n) => n.match(location.pathname) && n.label !== 'シミュレーター',
+  )
 
   const goTo = (y: number, m: number) => {
     const base = isMonthScoped ? currentBase : '/dashboard'
@@ -160,123 +113,62 @@ function AppLayoutContent() {
   }
 
   return (
-    <>
-      <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
-            <img
-              src="/icon.png"
-              alt="INEX"
-              className="h-6 w-auto shrink-0"
-            />
-            <span className="text-sm font-semibold tracking-wide group-data-[collapsible=icon]:hidden">
+    <div className="min-h-svh bg-background text-foreground">
+      <header className="sticky top-0 z-20 border-b border-border bg-card">
+        <div className="flex h-[60px] items-center gap-4 px-4 md:gap-7 md:px-7">
+          {/* logo */}
+          <Link to="/" className="flex shrink-0 items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-[8px] bg-primary text-[14px] font-extrabold text-primary-foreground">
+              家
+            </span>
+            <span className="text-[15px] font-extrabold tracking-wide">
               INEX
             </span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>メニュー</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {MAIN_NAV.map((item) => {
-                  const to = `${item.path}/${year}/${month}`
-                  const active = item.path === '/dashboard'
-                    ? location.pathname === '/' || location.pathname.startsWith('/dashboard')
-                    : location.pathname.startsWith(item.path)
-                  return (
-                    <SidebarMenuItem key={item.label}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.label}
-                      >
-                        <Link to={to} onClick={closeMobileSidebar}>
-                          {item.icon}
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>分析</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname.startsWith('/scenarios')}
-                    tooltip="シミュレーター"
-                  >
-                    <Link to="/scenarios" onClick={closeMobileSidebar}>
-                      <FlaskConical className="size-4" />
-                      <span>シミュレーター</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="設定"
-                isActive={location.pathname.startsWith('/settings')}
-              >
-                <Link to="/settings" onClick={closeMobileSidebar}>
-                  <Settings className="size-4" />
-                  <span>設定</span>
+          </Link>
+
+          {/* nav pills */}
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {NAV.map((item) => {
+              const active = item.match(location.pathname)
+              return (
+                <Link
+                  key={item.label}
+                  to={item.to(year, month)}
+                  className={cn(
+                    'inline-flex h-[34px] shrink-0 items-center gap-1 rounded-full px-3.5 text-[13.5px] transition-colors',
+                    active
+                      ? 'bg-primary-soft font-bold text-primary-strong'
+                      : 'font-medium text-muted-foreground-2 hover:bg-primary-soft/50',
+                  )}
+                >
+                  {item.label}
+                  {item.chevron && (
+                    <span className="text-[10px] text-muted-foreground">▾</span>
+                  )}
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="ログアウト"
-                onClick={() => {
-                  clearTokens()
-                  navigate('/login', { replace: true })
-                }}
-              >
-                <LogOut className="size-4" />
-                <span>ログアウト</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background px-4">
-          <SidebarTrigger />
-          {isMonthScoped && (
-            <>
-          <Separator orientation="vertical" className="h-6" />
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+              )
+            })}
+          </nav>
+
+          {/* month pill */}
+          <div className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-input px-2 text-[13px] font-bold tabular-nums">
+            <button
+              type="button"
               onClick={() => shift(-1)}
               aria-label="前月"
+              className="px-1 text-base leading-none text-primary-strong"
             >
-              <ChevronLeft className="size-4" />
-              前月
-            </Button>
+              ‹
+            </button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="tabular-nums font-semibold"
+                <button
+                  type="button"
                   aria-label="年月を選択"
+                  className="tabular-nums"
                 >
                   {year}年{month}月
-                </Button>
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3" align="center">
                 <div className="flex items-center gap-2">
@@ -313,34 +205,30 @@ function AppLayoutContent() {
                 </div>
               </PopoverContent>
             </Popover>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              type="button"
               onClick={() => shift(1)}
               aria-label="次月"
+              className="px-1 text-base leading-none text-primary-strong"
             >
-              次月
-              <ChevronRight className="size-4" />
-            </Button>
-            {(year !== todayYearMonth().year || month !== todayYearMonth().month) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goTo(todayYearMonth().year, todayYearMonth().month)}
-                aria-label="今月に戻る"
-              >
-                <CalendarCheck className="size-4" />
-                今月
-              </Button>
-            )}
+              ›
+            </button>
           </div>
-            </>
-          )}
-        </header>
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-      </SidebarInset>
-    </>
+
+          {/* settings */}
+          <Link
+            to="/settings"
+            aria-label="設定"
+            className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <SettingsIcon className="size-[18px]" />
+          </Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1280px] px-7 py-8">
+        <Outlet />
+      </main>
+    </div>
   )
 }
