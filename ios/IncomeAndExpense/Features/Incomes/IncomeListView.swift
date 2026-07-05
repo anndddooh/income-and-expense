@@ -13,10 +13,20 @@ struct IncomeListView: View {
         @Bindable var stateFilter = stateFilter
         List {
             Section {
+                ScreenHeading("収入")
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 4, trailing: 4))
+
+            Section {
                 StateFilterChips(selected: $stateFilter.selected)
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 8, trailing: 4))
 
-            Section("収入") {
+            Section {
                 if store.incomes.isEmpty {
                     PlaceholderRow(kind: store.isLoading
                         ? .loading
@@ -36,6 +46,7 @@ struct IncomeListView: View {
                         IncomeRowView(income: income)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Palette.card)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             Task { try? await store.delete(id: income.id) }
@@ -45,30 +56,34 @@ struct IncomeListView: View {
                     }
                 }
             }
+            .listRowSeparatorTint(Palette.rowSeparator)
 
             Section {
-                LabeledContent("前月残高") {
-                    Text(store.prevBalance.yenString)
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("当月収入(\(store.incomes.count)件)") {
-                    Text(currentIncomeTotal.yenString)
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("合計") {
-                    Text((store.prevBalance + currentIncomeTotal).yenString)
-                        .font(.body.monospacedDigit().weight(.semibold))
-                }
+                totalsLine
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+
+            Section {
+                YutoriPillButton(title: "＋ 収入を追加", kind: .outline) { showingNewForm = true }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 12, trailing: 4))
 
             if let error = store.errorMessage {
                 Section {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Palette.expense)
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .refreshable {
             await store.fetch(year: monthStore.year, month: monthStore.month)
         }
@@ -141,6 +156,29 @@ struct IncomeListView: View {
                 }
             }
         }
+    }
+
+    private var totalsLine: some View {
+        HStack {
+            HStack(spacing: 5) {
+                Text("当月収入(\(store.incomes.count)件)")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(currentIncomeTotal.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
+            }
+            Spacer()
+            HStack(spacing: 5) {
+                Text("前月残高")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(store.prevBalance.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
+            }
+        }
+        .font(.yutori(12.5))
     }
 
     private var monthKey: String {

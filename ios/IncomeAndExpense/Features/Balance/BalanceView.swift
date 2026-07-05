@@ -6,65 +6,33 @@ struct BalanceView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
-        List {
-            Section("残高サマリ") {
-                LabeledContent("口座合計") {
-                    Text(verbatim: amountText(viewModel.response?.balanceSum))
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("計算上の残高") {
-                    Text(verbatim: amountText(viewModel.response?.balanceOnDb))
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("差額") {
-                    diffView(viewModel.response?.balanceDiff ?? 0)
-                }
-            }
+        ScrollView {
+            VStack(spacing: 18) {
+                ScreenHeading("残高")
 
-            Section("口座別") {
-                if let accounts = viewModel.response?.accounts, !accounts.isEmpty {
-                    ForEach(accounts) { account in
-                        Button {
-                            editingAccount = account
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(account.bank).font(.body)
-                                    Text(account.user).font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Text(account.formedBalance)
-                                    .font(.body.monospacedDigit())
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                } else {
-                    PlaceholderRow(kind: viewModel.isLoading
-                        ? .loading
-                        : .empty(icon: "building.columns", message: "口座がありません"))
-                }
-            }
+                summaryCard
 
-            if let error = viewModel.errorMessage {
-                Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    GroupCaption("口座ごとの実残高")
+                    accountsCard
+                }
+
+                if let error = viewModel.errorMessage {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(16)
         }
+        .background(Palette.background)
         .refreshable {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
         .task(id: monthKey) {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
-        .navigationTitle("残高")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -85,10 +53,94 @@ struct BalanceView: View {
 
     private var monthKey: String { "\(monthStore.year)-\(monthStore.month)" }
 
-    private func diffView(_ diff: Int) -> some View {
-        Text(verbatim: amountText(diff))
-            .font(.body.monospacedDigit())
-            .foregroundStyle(diff == 0 ? Color.secondary : Palette.expense)
+    private var summaryCard: some View {
+        let diff = viewModel.response?.balanceDiff ?? 0
+        return VStack(alignment: .leading, spacing: 0) {
+            Text("実残高合計")
+                .font(.yutori(12))
+                .foregroundStyle(Palette.mutedForeground)
+            Text(verbatim: amountText(viewModel.response?.balanceSum))
+                .font(.yutori(30, weight: .heavy))
+                .monospacedDigit()
+                .foregroundStyle(Palette.foreground)
+                .padding(.top, 4)
+            HStack(spacing: 18) {
+                metric(label: "DB残高(完了分)",
+                       value: amountText(viewModel.response?.balanceOnDb),
+                       color: Palette.foreground)
+                metric(label: "差額",
+                       value: amountText(diff),
+                       color: diff == 0 ? Palette.income : Palette.expense)
+            }
+            .padding(.top, 10)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .yutoriCard()
+    }
+
+    private func metric(label: String, value: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Text(label)
+                .foregroundStyle(Palette.mutedForeground)
+            Text(verbatim: value)
+                .fontWeight(.bold)
+                .monospacedDigit()
+                .foregroundStyle(color)
+        }
+        .font(.yutori(12))
+    }
+
+    @ViewBuilder
+    private var accountsCard: some View {
+        if let accounts = viewModel.response?.accounts, !accounts.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
+                    Button {
+                        editingAccount = account
+                    } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(account.bank)
+                                    .font(.yutori(15, weight: .bold))
+                                    .foregroundStyle(Palette.foreground)
+                                Text(account.user)
+                                    .font(.yutori(11.5))
+                                    .foregroundStyle(Palette.mutedForeground)
+                            }
+                            Spacer(minLength: 8)
+                            Text(account.formedBalance)
+                                .font(.yutori(15, weight: .bold))
+                                .monospacedDigit()
+                                .foregroundStyle(Palette.foreground)
+                            Text("編集")
+                                .font(.yutori(12, weight: .bold))
+                                .foregroundStyle(Palette.primaryStrong)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 4)
+                                .overlay(Capsule().stroke(Palette.accent, lineWidth: 1.5))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 13)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    if index < accounts.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
+        } else {
+            VStack {
+                PlaceholderRow(kind: viewModel.isLoading
+                    ? .loading
+                    : .empty(icon: "building.columns", message: "口座がありません"))
+            }
+            .yutoriCard()
+        }
     }
 
     private func amountText(_ value: Int?) -> String {
@@ -121,18 +173,24 @@ private struct BalanceEditSheet: View {
                     Section {
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Palette.expense)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Palette.background)
             .navigationTitle("残高を編集")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
+                        .fontWeight(.bold)
+                        .tint(Palette.mutedForeground2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { save() }
+                        .fontWeight(.bold)
+                        .tint(Palette.primaryStrong)
                         .disabled(isSaving)
                 }
             }
