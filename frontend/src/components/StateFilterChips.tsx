@@ -1,26 +1,6 @@
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import type { State } from '@/components/StateIndicator'
+import { STATE_META, type State } from '@/components/StateIndicator'
 
-const ALL_STATES: { state: State; label: string }[] = [
-  { state: 0, label: '未定' },
-  { state: 1, label: '確定' },
-  { state: 2, label: '完了' },
-]
-
-function chipClass(state: State, active: boolean): string {
-  if (!active) {
-    return 'bg-transparent text-muted-foreground border-input hover:bg-accent'
-  }
-  switch (state) {
-    case 0:
-      return 'bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100'
-    case 1:
-      return 'bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-100'
-    case 2:
-      return 'bg-muted text-muted-foreground border-transparent hover:bg-muted'
-  }
-}
+const ALL_STATES: State[] = [0, 1, 2]
 
 export function StateFilterChips({
   selected,
@@ -38,8 +18,9 @@ export function StateFilterChips({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-muted-foreground">状態:</span>
-      {ALL_STATES.map(({ state, label }) => {
+      <span className="text-[12.5px] text-muted-foreground">状態:</span>
+      {ALL_STATES.map((state) => {
+        const { label, color, rgb } = STATE_META[state]
         const active = selected.includes(state)
         return (
           <button
@@ -47,11 +28,22 @@ export function StateFilterChips({
             type="button"
             onClick={() => toggle(state)}
             aria-pressed={active}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+            className="cursor-pointer rounded-full px-[13px] py-[5px] text-[12px] font-bold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            style={
+              active
+                ? {
+                    color,
+                    background: `rgba(${rgb}, 0.16)`,
+                    border: `1px solid rgba(${rgb}, 0.4)`,
+                  }
+                : {
+                    color: 'var(--muted-foreground)',
+                    background: 'transparent',
+                    border: '1px solid var(--input)',
+                  }
+            }
           >
-            <Badge variant="outline" className={cn('cursor-pointer', chipClass(state, active))}>
-              {label}
-            </Badge>
+            {label}
           </button>
         )
       })}

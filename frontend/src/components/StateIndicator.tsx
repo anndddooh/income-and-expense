@@ -1,27 +1,24 @@
-import { Badge } from '@/components/ui/badge'
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
 export type State = 0 | 1 | 2
 
-/**
- * TableRowに付ける左端カラーバー用のクラス。
- * tr に border-l を当てても効かない環境があるので、
- * 先頭セルに border-l-4 と色を当てる想定。
- */
-export function stateBarClass(state: State): string {
-  switch (state) {
-    case 0:
-      return 'border-l-4 border-l-amber-400'
-    case 1:
-      return 'border-l-4 border-l-blue-500'
-    case 2:
-      return 'border-l-4 border-l-muted-foreground/40'
-  }
+/** 状態ごとの色（「ゆとり」テーマ）。rgb は不透明度付き背景/枠に使う。 */
+export const STATE_META: Record<State, { label: string; color: string; rgb: string }> = {
+  0: { label: '未定', color: 'var(--state-undecided)', rgb: '176,132,48' },
+  1: { label: '確定', color: 'var(--state-confirmed)', rgb: '100,121,143' },
+  2: { label: '完了', color: 'var(--state-done)', rgb: '82,121,107' },
 }
 
 /**
- * ドットだけの軽量表示(ダッシュボードなど狭い場所用)。
+ * 旧: 左端カラーバー用クラス。新デザインでは状態バッジに一本化したため無効化。
+ * 呼び出し側の互換のため空文字を返す。
  */
+export function stateBarClass(_state: State): string {
+  return ''
+}
+
+/** ドットだけの軽量表示(ダッシュボードなど狭い場所用)。 */
 export function StateDot({
   state,
   className,
@@ -29,39 +26,33 @@ export function StateDot({
   state: State
   className?: string
 }) {
-  const color =
-    state === 0
-      ? 'bg-amber-400'
-      : state === 1
-        ? 'bg-blue-500'
-        : 'bg-muted-foreground/40'
+  const { color } = STATE_META[state]
   return (
     <span
       aria-hidden
-      className={cn('inline-block size-2 rounded-full', color, className)}
+      className={cn('inline-block size-2 rounded-full', className)}
+      style={{ background: color }}
     />
   )
 }
 
-/**
- * 状態をテキスト付きの色バッジで表示。
- */
+/** 状態をテキスト付きの色ピルで表示。 */
 export function StateBadge({
   state,
   label,
+  style,
 }: {
   state: State
   label: string
+  style?: CSSProperties
 }) {
-  const cls =
-    state === 0
-      ? 'bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100'
-      : state === 1
-        ? 'bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-100'
-        : 'bg-muted text-muted-foreground border-transparent hover:bg-muted'
+  const { color, rgb } = STATE_META[state]
   return (
-    <Badge variant="outline" className={cls}>
+    <span
+      className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11.5px] font-bold whitespace-nowrap"
+      style={{ color, background: `rgba(${rgb}, 0.15)`, ...style }}
+    >
       {label}
-    </Badge>
+    </span>
   )
 }

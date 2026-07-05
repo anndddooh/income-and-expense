@@ -13,10 +13,20 @@ struct ExpenseListView: View {
         @Bindable var stateFilter = stateFilter
         List {
             Section {
+                ScreenHeading("支出")
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 4, trailing: 4))
+
+            Section {
                 StateFilterChips(selected: $stateFilter.selected)
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 8, trailing: 4))
 
-            Section("支出") {
+            Section {
                 if store.expenses.isEmpty {
                     PlaceholderRow(kind: store.isLoading
                         ? .loading
@@ -36,6 +46,7 @@ struct ExpenseListView: View {
                         ExpenseRowView(expense: expense)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Palette.card)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             Task { try? await store.delete(id: expense.id) }
@@ -45,27 +56,34 @@ struct ExpenseListView: View {
                     }
                 }
             }
+            .listRowSeparatorTint(Palette.rowSeparator)
 
             Section {
-                LabeledContent("当月支出(\(store.expenses.count)件)") {
-                    Text(currentExpenseTotal.yenString)
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("当月残高") {
-                    Text(store.balance.yenString)
-                        .font(.body.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(store.balance < 0 ? Palette.expense : .primary)
-                }
+                totalsLine
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+
+            Section {
+                YutoriPillButton(title: "＋ 支出を追加") { showingNewForm = true }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 12, trailing: 4))
 
             if let error = store.errorMessage {
                 Section {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Palette.expense)
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .refreshable {
             await store.fetch(year: monthStore.year, month: monthStore.month)
         }
@@ -138,6 +156,29 @@ struct ExpenseListView: View {
                 }
             }
         }
+    }
+
+    private var totalsLine: some View {
+        HStack {
+            HStack(spacing: 5) {
+                Text("当月支出(\(store.expenses.count)件)")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(currentExpenseTotal.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
+            }
+            Spacer()
+            HStack(spacing: 5) {
+                Text("当月残高")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(store.balance.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(store.balance < 0 ? Palette.expense : Palette.foreground)
+            }
+        }
+        .font(.yutori(12.5))
     }
 
     private var monthKey: String {

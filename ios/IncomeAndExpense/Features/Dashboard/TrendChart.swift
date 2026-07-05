@@ -24,9 +24,12 @@ struct TrendChart: View {
         }
         .chartForegroundStyleScale([
             "収入": Palette.income,
-            "支出": Palette.expense,
+            "支出": Palette.accent,
         ])
         .chartLegend(position: .top, alignment: .trailing)
+        .chartPlotStyle { plot in
+            plot.background(Color.clear)
+        }
         .chartXAxis {
             // 12ヶ月分のラベルが重ならないよう2ヶ月おきに表示
             AxisMarks(values: .stride(by: .month, count: 2)) { value in

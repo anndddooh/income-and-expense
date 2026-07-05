@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import PageHeader from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Segmented } from '@/components/Segmented'
+import { STATE_META } from '@/components/StateIndicator'
 import {
   Form,
   FormControl,
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { card, fieldLabel, pillCancel, pillOutlineSm, pillPrimary } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import { applyServerErrors } from '@/lib/form-errors'
 import {
@@ -47,11 +48,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const STATES = [
-  { value: '0', label: '未定' },
-  { value: '1', label: '確定' },
-  { value: '2', label: '完了' },
+const STATE_OPTS = [
+  { value: '0', label: '未定', activeColor: STATE_META[0].color },
+  { value: '1', label: '確定', activeColor: STATE_META[1].color },
+  { value: '2', label: '完了', activeColor: STATE_META[2].color },
 ]
+
+const selectCls = 'h-[42px] rounded-input bg-white'
 
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
 
@@ -125,8 +128,7 @@ export default function DefaultIncomeForm() {
   return (
     <div className="max-w-xl">
       <PageHeader title={isEdit ? 'デフォルト収入を編集' : 'デフォルト収入を追加'} />
-      <Card>
-        <CardContent className="pt-6">
+      <div className={`${card} p-[26px]`}>
           <Form {...form}>
             <form
               className="space-y-4"
@@ -183,7 +185,7 @@ export default function DefaultIncomeForm() {
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={selectCls}>
                           <SelectValue placeholder="選択" />
                         </SelectTrigger>
                       </FormControl>
@@ -227,24 +229,14 @@ export default function DefaultIncomeForm() {
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>状態</FormLabel>
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {STATES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className={fieldLabel}>状態</FormLabel>
+                    <FormControl>
+                      <Segmented
+                        value={String(field.value)}
+                        onChange={(v) => field.onChange(Number(v))}
+                        options={STATE_OPTS}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -274,10 +266,10 @@ export default function DefaultIncomeForm() {
                               type="button"
                               onClick={() => toggle(m)}
                               className={cn(
-                                'h-8 w-12 rounded-md border text-sm transition-colors',
+                                'h-8 w-12 rounded-full border text-[13px] font-bold transition-colors',
                                 active
                                   ? 'border-primary bg-primary text-primary-foreground'
-                                  : 'border-input bg-background hover:bg-accent'
+                                  : 'border-input bg-white text-muted-foreground-2 hover:bg-primary-soft/40'
                               )}
                             >
                               {m}月
@@ -286,22 +278,12 @@ export default function DefaultIncomeForm() {
                         })}
                       </div>
                       <div className="mt-2 flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={setAll}
-                        >
+                        <button type="button" className={pillOutlineSm} onClick={setAll}>
                           全選択
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={clearAll}
-                        >
+                        </button>
+                        <button type="button" className={pillOutlineSm} onClick={clearAll}>
                           クリア
-                        </Button>
+                        </button>
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -315,22 +297,21 @@ export default function DefaultIncomeForm() {
                 </p>
               )}
 
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={mut.isPending}>
-                  {isEdit ? '更新' : '追加'}
-                </Button>
-                <Button
+              <div className="flex gap-2.5 pt-1">
+                <button type="submit" className={pillPrimary} disabled={mut.isPending}>
+                  {isEdit ? '更新する' : '追加する'}
+                </button>
+                <button
                   type="button"
-                  variant="outline"
+                  className={pillCancel}
                   onClick={() => navigate('/settings/default-incomes')}
                 >
                   キャンセル
-                </Button>
+                </button>
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

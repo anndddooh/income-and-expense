@@ -1,31 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  AlertTriangle,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Plus,
-  Wallet,
-} from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
-import { StateDot, type State } from '@/components/StateIndicator'
 import TrendChart from '@/components/TrendChart'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { card, cardSm, pillOutline, pillPrimary } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import { fetchBalance } from '@/api/balance'
 import { fetchExpenses } from '@/api/expenses'
@@ -65,7 +42,9 @@ export default function Dashboard() {
   const expenses = expensesQ.data?.results ?? []
   const incomeTotal = incomes.reduce((s, i) => s + i.amount, 0)
   const expenseTotal = expenses.reduce((s, i) => s + i.amount, 0)
+  const net = incomeTotal - expenseTotal
   const balanceSum = balanceQ.data?.balance_sum ?? 0
+  const prevBalance = incomesQ.data?.prev_balance ?? 0
   const insufficient = requireQ.data?.insufficient_sum ?? 0
 
   const recent = [
@@ -73,19 +52,15 @@ export default function Dashboard() {
       id: `i-${r.id}`,
       pay_date: r.pay_date,
       name: r.name,
-      method: r.method_name,
       kind: '収入' as const,
       amount: r.amount,
-      state: r.state as State,
     })),
     ...expenses.map((r) => ({
       id: `e-${r.id}`,
       pay_date: r.pay_date,
       name: r.name,
-      method: r.method_name,
       kind: '支出' as const,
       amount: r.amount,
-      state: r.state as State,
     })),
   ]
     .sort((a, b) => b.pay_date.localeCompare(a.pay_date))
@@ -93,162 +68,156 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader
-        title="ダッシュボード"
-        description={`${year}年${month}月のサマリ`}
-        actions={
-          <>
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/incomes/${year}/${month}/new`}>
-                <Plus className="size-4" />
-                収入を追加
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link to={`/expenses/${year}/${month}/new`}>
-                <Plus className="size-4" />
-                支出を追加
-              </Link>
-            </Button>
-          </>
-        }
-      />
+      <PageHeader title="ホーム" description={`${month}月のサマリ`} />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Kpi
-          label="今月の収入"
-          value={`¥${incomeTotal.toLocaleString()}`}
-          icon={<ArrowUpCircle className="size-4 text-chart-1" />}
-        />
-        <Kpi
-          label="今月の支出"
-          value={`¥${expenseTotal.toLocaleString()}`}
-          icon={<ArrowDownCircle className="size-4 text-chart-2" />}
-        />
-        <Kpi
-          label="口座残高合計"
-          value={`¥${balanceSum.toLocaleString()}`}
-          icon={<Wallet className="size-4" />}
-        />
-        <Kpi
-          label="不足額合計"
-          value={`¥${insufficient.toLocaleString()}`}
-          valueClassName={
-            insufficient > 0 ? 'text-destructive' : 'text-green-600'
-          }
-          icon={
-            <AlertTriangle
-              className={cn(
-                'size-4',
-                insufficient > 0 ? 'text-destructive' : 'text-muted-foreground'
-              )}
-            />
-          }
-        />
+      {/* hero + KPI */}
+      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        <div className={cn(card, 'p-7')}>
+          <div className="text-[14px] font-medium text-muted-foreground">
+            {month}月の収支
+          </div>
+          <div
+            className="mt-1.5 text-[44px] leading-none font-extrabold tabular-nums"
+            style={{ color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}
+          >
+            {net >= 0 ? '＋' : '−'}¥{Math.abs(net).toLocaleString()}
+          </div>
+          <div className="mt-2.5 flex gap-6 text-[13px] text-muted-foreground tabular-nums">
+            <span>
+              収入{' '}
+              <span className="font-bold text-foreground">
+                ¥{incomeTotal.toLocaleString()}
+              </span>
+            </span>
+            <span>
+              支出{' '}
+              <span className="font-bold text-foreground">
+                ¥{expenseTotal.toLocaleString()}
+              </span>
+            </span>
+          </div>
+          <div className="mt-[22px] flex flex-wrap gap-2.5">
+            <Link to={`/expenses/${year}/${month}/new`} className={pillPrimary}>
+              ＋ 支出を追加
+            </Link>
+            <Link to={`/incomes/${year}/${month}/new`} className={pillOutline}>
+              ＋ 収入を追加
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid content-start gap-3">
+          <Kpi
+            label="口座残高合計"
+            value={`¥${balanceSum.toLocaleString()}`}
+          />
+          <Kpi label="前月繰越" value={`¥${prevBalance.toLocaleString()}`} />
+          <Kpi
+            label="不足額"
+            value={`¥${insufficient.toLocaleString()}`}
+            valueColor={insufficient > 0 ? 'var(--expense)' : 'var(--income)'}
+          />
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>月次推移 (直近12か月)</CardTitle>
-            <CardDescription>収入と支出の比較</CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* chart + recent */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <div className={cn(card, 'p-[22px]')}>
+          <div className="flex items-baseline justify-between">
+            <span className="text-[15px] font-extrabold">月ごとのながれ</span>
+            <div className="flex gap-3.5">
+              <Legend color="var(--income)" label="収入" />
+              <Legend color="var(--accent)" label="支出" />
+            </div>
+          </div>
+          <div className="mt-2">
             {trendsQ.isLoading ? (
-              <p className="text-sm text-muted-foreground">読み込み中...</p>
+              <p className="py-16 text-center text-[13px] text-muted-foreground">
+                読み込み中...
+              </p>
             ) : trendsQ.data ? (
               <TrendChart data={trendsQ.data.months} />
             ) : null}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>最近の取引</CardTitle>
-            <CardDescription>
-              当月の収支から最新 {recent.length} 件
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>日付</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>種別</TableHead>
-                  <TableHead className="text-right">金額</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recent.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="tabular-nums text-xs">
-                      {r.pay_date}
-                    </TableCell>
-                    <TableCell className="truncate max-w-32">
-                      <span className="inline-flex items-center gap-1.5">
-                        <StateDot state={r.state} />
-                        {r.name}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          'text-xs font-medium',
-                          r.kind === '収入'
-                            ? 'text-chart-1'
-                            : 'text-chart-2'
-                        )}
-                      >
-                        {r.kind}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      ¥{r.amount.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {recent.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center text-muted-foreground"
-                    >
-                      データがありません
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className={cn(card, 'py-[22px]')}>
+          <div className="px-[22px] pb-2 text-[15px] font-extrabold">
+            最近の記帳
+          </div>
+          {recent.length === 0 ? (
+            <p className="py-10 text-center text-[13px] text-muted-foreground">
+              データがありません
+            </p>
+          ) : (
+            recent.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center gap-3 border-t border-row-separator px-[22px] py-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13.5px] font-medium">
+                    {r.name}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground tabular-nums">
+                    {r.pay_date}
+                  </div>
+                </div>
+                <span
+                  className="text-[13.5px] font-bold tabular-nums"
+                  style={{
+                    color:
+                      r.kind === '収入' ? 'var(--income)' : 'var(--foreground)',
+                  }}
+                >
+                  {r.kind === '収入' ? '＋' : '−'}¥{r.amount.toLocaleString()}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </>
+  )
+}
+
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11.5px] text-muted-foreground-2">
+      <span
+        className="size-[9px] rounded-full"
+        style={{ background: color }}
+      />
+      {label}
+    </span>
   )
 }
 
 function Kpi({
   label,
   value,
-  valueClassName,
-  icon,
+  valueColor,
 }: {
   label: string
   value: string
-  valueClassName?: string
-  icon?: React.ReactNode
+  valueColor?: string
 }) {
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
-        <CardDescription>{label}</CardDescription>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className={cn('text-2xl font-semibold tabular-nums', valueClassName)}>
-          {value}
-        </div>
-      </CardContent>
-    </Card>
+    <div
+      className={cn(
+        cardSm,
+        'flex items-center justify-between px-5 py-3.5',
+      )}
+    >
+      <span className="text-[13px] font-medium text-muted-foreground">
+        {label}
+      </span>
+      <span
+        className="text-[19px] font-extrabold tabular-nums"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </span>
+    </div>
   )
 }
