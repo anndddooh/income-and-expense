@@ -22,6 +22,5 @@ struct IncomeRowView: View {
                 StateBadge(state: income.state)
             }
         }
-        .padding(.vertical, 2)
     }
 }

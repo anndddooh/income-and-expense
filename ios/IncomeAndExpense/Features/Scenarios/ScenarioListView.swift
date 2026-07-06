@@ -7,11 +7,10 @@ struct ScenarioListView: View {
     @State private var newNote: String = ""
     @State private var copyFromDefaults: Bool = true
     @State private var isCreating: Bool = false
-    @State private var navigatingTo: Scenario? = nil
 
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     ScreenHeading("シミュレーター")
                     Text("収支シナリオを作って、支出の増減を試算できます。")
@@ -19,51 +18,21 @@ struct ScenarioListView: View {
                         .foregroundStyle(Palette.mutedForeground)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                .padding(.horizontal, 4)
 
-            Section {
-                if store.items.isEmpty {
-                    PlaceholderRow(kind: store.isLoading
-                        ? .loading
-                        : .empty(icon: "flask", message: "シナリオがありません"))
-                }
-                ForEach(store.items) { item in
-                    NavigationLink {
-                        ScenarioDetailView(scenarioID: item.id, initialName: item.name)
-                    } label: {
-                        row(item)
-                    }
-                    .listRowBackground(Palette.card)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            Task { try? await store.delete(id: item.id) }
-                        } label: {
-                            Label("削除", systemImage: "trash")
-                        }
-                    }
-                }
-            }
-            .listRowSeparatorTint(Palette.rowSeparator)
+                listCard
 
-            Section {
                 YutoriPillButton(title: "＋ 新しいシナリオ") { showingNewForm = true }
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 12, trailing: 4))
 
-            if let error = store.errorMessage {
-                Section {
-                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
+                if let error = store.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .listRowBackground(Color.clear)
             }
+            .padding(16)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(Palette.background)
         .refreshable { await store.fetch() }
         .task { await store.fetch() }
@@ -79,22 +48,67 @@ struct ScenarioListView: View {
         }
     }
 
-    private func row(_ item: Scenario) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(item.name)
-                .font(.yutori(15, weight: .bold))
-                .foregroundStyle(Palette.foreground)
-            if !item.note.isEmpty {
-                Text(item.note)
-                    .font(.yutori(11.5))
-                    .foregroundStyle(Palette.mutedForeground)
-                    .lineLimit(2)
+    @ViewBuilder
+    private var listCard: some View {
+        if store.items.isEmpty {
+            VStack {
+                PlaceholderRow(kind: store.isLoading
+                    ? .loading
+                    : .empty(icon: "flask", message: "シナリオがありません"))
             }
-            Text(verbatim: "\(item.itemCount)項目 · 更新 \(item.updatedAt.prefix(10))")
-                .font(.yutori(11))
-                .foregroundStyle(Palette.mutedForeground)
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(store.items.enumerated()), id: \.element.id) { index, item in
+                    NavigationLink {
+                        ScenarioDetailView(scenarioID: item.id, initialName: item.name)
+                    } label: {
+                        row(item)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            Task { try? await store.delete(id: item.id) }
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
+                    }
+                    if index < store.items.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
         }
-        .padding(.vertical, 2)
+    }
+
+    private func row(_ item: Scenario) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.name)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
+                if !item.note.isEmpty {
+                    Text(item.note)
+                        .font(.yutori(11.5))
+                        .foregroundStyle(Palette.mutedForeground)
+                        .lineLimit(2)
+                }
+                Text(verbatim: "\(item.itemCount)項目 · 更新 \(item.updatedAt.prefix(10))")
+                    .font(.yutori(11))
+                    .foregroundStyle(Palette.mutedForeground)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Palette.accent)
+        }
     }
 
     private var newScenarioSheet: some View {
