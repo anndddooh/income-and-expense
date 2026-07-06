@@ -7,14 +7,14 @@ struct LoanRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(loan.name)
-                    .font(.body)
-                    .fontWeight(.medium)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
                 Spacer()
                 StateBadge(state: loan.state)
             }
             Text(verbatim: "\(loan.firstYear)年\(loan.firstMonth)月 – \(loan.lastYear)年\(loan.lastMonth)月 · 毎月\(loan.payDay)日")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.yutori(11.5))
+                .foregroundStyle(Palette.mutedForeground)
             HStack(spacing: 6) {
                 Text(verbatim: "\(loan.methodName) · \(loan.account.user) / \(loan.account.bank)")
                 Spacer()
@@ -23,8 +23,8 @@ struct LoanRowView: View {
                 Text(verbatim: "2回目〜 \(loan.amountFromSecond.yenString)")
                     .monospacedDigit()
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(.yutori(11.5))
+            .foregroundStyle(Palette.mutedForeground)
         }
         .padding(.vertical, 2)
     }

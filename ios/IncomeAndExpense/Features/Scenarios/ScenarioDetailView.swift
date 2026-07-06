@@ -23,10 +23,12 @@ struct ScenarioDetailView: View {
             itemsSection
             if let error = store.errorMessage {
                 Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .navigationTitle(store.scenario?.name ?? initialName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -90,7 +92,7 @@ struct ScenarioDetailView: View {
                 summaryRow("合計支出", s.totalExpense, bold: true)
                 summaryRow(
                     "収支", s.balance, bold: true,
-                    tint: s.balance < 0 ? .red : .green
+                    tint: s.balance < 0 ? Palette.expense : Palette.income
                 )
                 summaryRow("必須支出計", s.required)
                 summaryRow("任意支出計", s.optional)
@@ -105,13 +107,14 @@ struct ScenarioDetailView: View {
                         } label: {
                             Text("任意支出を全てオフ (¥\(optionalEnabled.formattedComma) 浮きます)")
                                 .font(.caption)
+                                .foregroundStyle(Palette.primaryStrong)
                         }
                     }
                 }
             } else {
                 Text("集計中...")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.mutedForeground)
             }
         }
     }
@@ -125,7 +128,7 @@ struct ScenarioDetailView: View {
                         innerRadius: .ratio(0.5),
                         angularInset: 2
                     )
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Palette.stateDecided)
                     .annotation(position: .overlay) {
                         Text("固定").font(.caption2)
                     }
@@ -136,7 +139,7 @@ struct ScenarioDetailView: View {
                         innerRadius: .ratio(0.5),
                         angularInset: 2
                     )
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Palette.accent)
                     .annotation(position: .overlay) {
                         Text("変動").font(.caption2)
                     }
@@ -147,7 +150,7 @@ struct ScenarioDetailView: View {
                         innerRadius: .ratio(0.5),
                         angularInset: 2
                     )
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(Palette.stateDone)
                     .annotation(position: .overlay) {
                         Text("単発").font(.caption2)
                     }
@@ -186,7 +189,7 @@ struct ScenarioDetailView: View {
                 }
             } label: {
                 Image(systemName: item.isEnabled ? "checkmark.square.fill" : "square")
-                    .foregroundStyle(item.isEnabled ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(item.isEnabled ? Palette.primaryStrong : Palette.mutedForeground)
             }
             .buttonStyle(.plain)
 
@@ -196,20 +199,21 @@ struct ScenarioDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(item.name)
-                            .font(.body)
-                            .foregroundStyle(item.isEnabled ? .primary : .secondary)
+                            .font(.yutori(15, weight: .bold))
+                            .foregroundStyle(item.isEnabled ? Palette.foreground : Palette.mutedForeground)
                         attributeBadge(item.categoryLabel, tint: categoryTint(item.category))
                         attributeBadge(
                             item.isRequired ? "必須" : "任意",
-                            tint: item.isRequired ? .accentColor : .secondary
+                            tint: item.isRequired ? Palette.primaryStrong : Palette.mutedForeground
                         )
                         Spacer()
                         Text(item.amount.yenString)
                             .font(.caption.monospacedDigit())
+                            .foregroundStyle(Palette.foreground)
                     }
                     Text(monthsLabel(item.months))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.mutedForeground)
                 }
             }
             .buttonStyle(.plain)
@@ -229,7 +233,7 @@ struct ScenarioDetailView: View {
             Spacer()
             Text(value.yenString)
                 .font(font.monospacedDigit())
-                .foregroundStyle(tint ?? Color.primary)
+                .foregroundStyle(tint ?? Palette.foreground)
         }
     }
 
@@ -244,9 +248,9 @@ struct ScenarioDetailView: View {
 
     private func categoryTint(_ category: ExpenseCategory) -> Color {
         switch category {
-        case .fixed: return .blue
-        case .variable: return .orange
-        case .oneTime: return .purple
+        case .fixed: return Palette.stateDecided
+        case .variable: return Palette.accent
+        case .oneTime: return Palette.stateDone
         }
     }
 

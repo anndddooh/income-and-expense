@@ -25,11 +25,7 @@ struct DefaultIncomeFormView: View {
                     }
                     TextField("金額", text: $viewModel.amount)
                         .keyboardType(.numberPad)
-                    Picker("状態", selection: $viewModel.state) {
-                        ForEach(InexState.allCases) { state in
-                            Text(state.label).tag(state)
-                        }
-                    }
+                    StatePickerRow(state: $viewModel.state)
                 }
 
                 Section("対象月") {
@@ -39,15 +35,19 @@ struct DefaultIncomeFormView: View {
 
                 if let error = viewModel.errorMessage {
                     Section {
-                        Text(error).font(.footnote).foregroundStyle(.red)
+                        Text(error).font(.footnote).foregroundStyle(Palette.expense)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Palette.background)
             .navigationTitle(viewModel.isEdit ? "デフォルト収入を編集" : "新しいデフォルト収入")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
+                        .fontWeight(.bold)
+                        .tint(Palette.mutedForeground2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -59,6 +59,8 @@ struct DefaultIncomeFormView: View {
                             }
                         }
                     }
+                    .fontWeight(.bold)
+                    .tint(Palette.primaryStrong)
                     .disabled(viewModel.isSaving)
                 }
             }

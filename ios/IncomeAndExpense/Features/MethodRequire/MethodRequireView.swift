@@ -7,17 +7,28 @@ struct MethodRequireView: View {
 
     var body: some View {
         List {
-            Section("サマリ") {
-                LabeledContent("必要額合計") {
-                    Text(verbatim: amountText(viewModel.response?.requireSum))
-                        .font(.body.monospacedDigit())
-                }
+            Section {
+                ScreenHeading("支払方法別必要額")
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
 
-            Section("支払方法別") {
+            Section {
+                kpiCard(
+                    label: "必要額合計",
+                    value: amountText(viewModel.response?.requireSum)
+                )
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
+
+            Section {
                 if let methods = viewModel.response?.methods, !methods.isEmpty {
                     ForEach(methods) { method in
                         methodRow(method)
+                            .listRowBackground(Palette.card)
                     }
                 } else {
                     PlaceholderRow(kind: viewModel.isLoading
@@ -25,20 +36,24 @@ struct MethodRequireView: View {
                         : .empty(icon: "creditcard", message: "データがありません"))
                 }
             }
+            .listRowSeparatorTint(Palette.rowSeparator)
 
             if let error = viewModel.errorMessage {
                 Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .refreshable {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
         .task(id: monthKey) {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
-        .navigationTitle("支払方法別必要額")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -87,27 +102,49 @@ struct MethodRequireView: View {
 
     private var monthKey: String { "\(monthStore.year)-\(monthStore.month)" }
 
+    private func kpiCard(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.yutori(12))
+                .foregroundStyle(Palette.mutedForeground)
+            Spacer()
+            Text(value)
+                .font(.yutori(19, weight: .heavy))
+                .monospacedDigit()
+                .foregroundStyle(Palette.foreground)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .yutoriCard(radius: 16)
+    }
+
     private func methodRow(_ method: MethodRequireRow) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(method.displayName).font(.body)
+                Text(method.displayName)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
                 Text(method.formedRequire)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(.yutori(12.5, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.mutedForeground)
             }
             Spacer()
             if method.require > 0 {
                 Button {
                     doneTarget = method
                 } label: {
-                    Label("完了", systemImage: "checkmark.circle.fill")
-                        .labelStyle(.iconOnly)
-                        .font(.title3)
+                    Text("一括完了")
+                        .font(.yutori(12, weight: .bold))
+                        .foregroundStyle(Palette.stateDone)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .overlay(Capsule().stroke(Palette.stateDone.opacity(0.5), lineWidth: 1.5))
                 }
-                .buttonStyle(.borderless)
-                .foregroundStyle(Palette.income)
+                .buttonStyle(.plain)
             }
         }
+        .padding(.vertical, 2)
     }
 
     private func amountText(_ value: Int?) -> String {
