@@ -59,7 +59,15 @@ struct AccountRequireView: View {
                     accountRow(row)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
-                        .background(row.isInsufficient ? Palette.expense.opacity(0.08) : Color.clear)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(row.isInsufficient ? Palette.expense.opacity(0.05) : Color.clear)
+                        .overlay(alignment: .leading) {
+                            if row.isInsufficient {
+                                Rectangle()
+                                    .fill(Palette.expense)
+                                    .frame(width: 3)
+                            }
+                        }
                     if index < accounts.count - 1 {
                         Rectangle()
                             .fill(Palette.rowSeparator)
