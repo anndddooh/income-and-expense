@@ -1,4 +1,5 @@
-import { Settings as SettingsIcon } from 'lucide-react'
+import { useState } from 'react'
+import { Menu, Settings as SettingsIcon } from 'lucide-react'
 import {
   Link,
   Outlet,
@@ -19,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { todayYearMonth } from '@/util/date'
 
 type NavItem = {
@@ -87,6 +95,7 @@ export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { year, month } = useCurrentYearMonth()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const seg = location.pathname.split('/').filter(Boolean)
   const currentBase = seg[0] ? `/${seg[0]}` : '/dashboard'
@@ -115,7 +124,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-svh bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-card">
-        <div className="flex h-[60px] items-center gap-4 px-4 md:gap-7 md:px-7">
+        <div className="flex h-[60px] items-center gap-3 px-4 md:gap-7 md:px-7">
           {/* logo */}
           <Link to="/" className="flex shrink-0 items-center gap-2.5">
             <span className="flex size-7 items-center justify-center rounded-[8px] bg-primary text-[14px] font-extrabold text-primary-foreground">
@@ -126,8 +135,8 @@ export default function AppLayout() {
             </span>
           </Link>
 
-          {/* nav pills */}
-          <nav className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* inline nav pills (desktop) */}
+          <nav className="hidden flex-1 items-center gap-1 overflow-x-auto md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NAV.map((item) => {
               const active = item.match(location.pathname)
               return (
@@ -150,8 +159,11 @@ export default function AppLayout() {
             })}
           </nav>
 
+          {/* spacer on mobile so month pill/menu go right */}
+          <div className="flex-1 md:hidden" />
+
           {/* month pill */}
-          <div className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-input px-2 text-[13px] font-bold tabular-nums">
+          <div className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-input px-2 text-[13px] font-bold tabular-nums">
             <button
               type="button"
               onClick={() => shift(-1)}
@@ -215,18 +227,74 @@ export default function AppLayout() {
             </button>
           </div>
 
-          {/* settings */}
+          {/* settings (desktop) */}
           <Link
             to="/settings"
             aria-label="設定"
-            className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden shrink-0 text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
           >
             <SettingsIcon className="size-[18px]" />
           </Link>
+
+          {/* mobile menu */}
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="メニュー"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground-2 transition-colors hover:bg-primary-soft/50 md:hidden"
+              >
+                <Menu className="size-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[260px] bg-card p-0">
+              <SheetHeader className="border-b border-border px-4 py-4">
+                <SheetTitle className="flex items-center gap-2.5 text-left">
+                  <span className="flex size-7 items-center justify-center rounded-[8px] bg-primary text-[14px] font-extrabold text-primary-foreground">
+                    家
+                  </span>
+                  <span className="text-[15px] font-extrabold">INEX</span>
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 p-3">
+                {NAV.map((item) => {
+                  const active = item.match(location.pathname)
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.to(year, month)}
+                      onClick={() => setMenuOpen(false)}
+                      className={cn(
+                        'flex h-11 items-center rounded-full px-4 text-[15px] transition-colors',
+                        active
+                          ? 'bg-primary-soft font-bold text-primary-strong'
+                          : 'font-medium text-muted-foreground-2 hover:bg-primary-soft/50',
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                })}
+                <Link
+                  to="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    'mt-1 flex h-11 items-center gap-2 rounded-full px-4 text-[15px] transition-colors',
+                    location.pathname.startsWith('/settings')
+                      ? 'bg-primary-soft font-bold text-primary-strong'
+                      : 'font-medium text-muted-foreground-2 hover:bg-primary-soft/50',
+                  )}
+                >
+                  <SettingsIcon className="size-[18px]" />
+                  設定
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1280px] px-7 py-8">
+      <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-7 md:py-8">
         <Outlet />
       </main>
     </div>
