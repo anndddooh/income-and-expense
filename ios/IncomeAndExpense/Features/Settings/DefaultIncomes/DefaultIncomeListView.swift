@@ -7,39 +7,62 @@ struct DefaultIncomeListView: View {
 
     var body: some View {
         List {
-            if store.items.isEmpty {
-                PlaceholderRow(kind: store.isLoading
-                    ? .loading
-                    : .empty(icon: "arrow.down.circle", message: "デフォルト収入が登録されていません"))
+            Section {
+                ScreenHeading("デフォルト収入")
             }
-            ForEach(store.items) { item in
-                Button {
-                    editingItem = item
-                } label: {
-                    row(item)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+
+            Section {
+                if store.items.isEmpty {
+                    PlaceholderRow(kind: store.isLoading
+                        ? .loading
+                        : .empty(icon: "arrow.down.circle", message: "デフォルト収入が登録されていません"))
                 }
-                .buttonStyle(.plain)
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        Task { try? await store.delete(id: item.id) }
+                ForEach(store.items) { item in
+                    Button {
+                        editingItem = item
                     } label: {
-                        Label("削除", systemImage: "trash")
+                        row(item)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(Palette.card)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            Task { try? await store.delete(id: item.id) }
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
                     }
                 }
             }
+            .listRowSeparatorTint(Palette.rowSeparator)
+
+            Section {
+                YutoriPillButton(title: "＋ デフォルト収入を追加", kind: .outline) { showingNewForm = true }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 12, trailing: 4))
 
             if let error = store.errorMessage {
                 Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .refreshable { await store.fetch() }
         .task { await store.fetch() }
-        .navigationTitle("デフォルト収入")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingNewForm = true } label: { Image(systemName: "plus") }
+                    .tint(Palette.primaryStrong)
             }
         }
         .sheet(isPresented: $showingNewForm) {
@@ -61,21 +84,27 @@ struct DefaultIncomeListView: View {
     private func row(_ item: DefaultIncome) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(item.name).font(.body)
+                Text(item.name)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
                 Spacer()
                 StateBadge(state: item.state)
             }
             HStack(spacing: 6) {
                 Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.yutori(11.5))
+                    .foregroundStyle(Palette.mutedForeground)
                 Spacer()
                 Text(item.amount.yenString)
-                    .font(.caption.monospacedDigit())
+                    .font(.yutori(12.5, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.income)
             }
             Text(monthsLabel(item.months))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.yutori(11))
+                .foregroundStyle(Palette.mutedForeground)
         }
+        .padding(.vertical, 2)
     }
 
     private func monthsLabel(_ months: [Int]) -> String {

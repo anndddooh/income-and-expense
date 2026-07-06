@@ -5,51 +5,94 @@ struct LoginView: View {
 
     var body: some View {
         @Bindable var viewModel = viewModel
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("ユーザー名", text: $viewModel.username)
-                        .textContentType(.username)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.next)
+        ZStack {
+            Palette.background.ignoresSafeArea()
 
-                    SecureField("パスワード", text: $viewModel.password)
-                        .textContentType(.password)
-                        .submitLabel(.go)
-                        .onSubmit {
+            ScrollView {
+                VStack(spacing: 18) {
+                    VStack(spacing: 10) {
+                        Text("家")
+                            .font(.yutori(28, weight: .heavy))
+                            .foregroundStyle(Palette.card)
+                            .frame(width: 60, height: 60)
+                            .background(Palette.primary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        Text("INEX にログイン")
+                            .font(.yutori(21, weight: .heavy))
+                            .foregroundStyle(Palette.foreground)
+                        Text("家計をひと目で、ゆとりのある毎日へ。")
+                            .font(.yutori(12.5))
+                            .foregroundStyle(Palette.mutedForeground)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    VStack(spacing: 12) {
+                        input {
+                            TextField("ユーザー名", text: $viewModel.username)
+                                .textContentType(.username)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .submitLabel(.next)
+                        }
+                        input {
+                            SecureField("パスワード", text: $viewModel.password)
+                                .textContentType(.password)
+                                .submitLabel(.go)
+                                .onSubmit {
+                                    Task { await viewModel.submit() }
+                                }
+                        }
+
+                        if let error = viewModel.errorMessage {
+                            Text(error)
+                                .font(.yutori(12))
+                                .foregroundStyle(Palette.expense)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        Button {
                             Task { await viewModel.submit() }
-                        }
-                }
-
-                if let error = viewModel.errorMessage {
-                    Section {
-                        Text(error)
-                            .foregroundStyle(.red)
-                            .font(.footnote)
-                    }
-                }
-
-                Section {
-                    Button {
-                        Task { await viewModel.submit() }
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if viewModel.isLoading {
-                                ProgressView()
-                            } else {
-                                Text("ログイン")
-                                    .fontWeight(.semibold)
+                        } label: {
+                            HStack {
+                                Spacer()
+                                if viewModel.isLoading {
+                                    ProgressView().tint(Palette.card)
+                                } else {
+                                    Text("ログイン")
+                                        .font(.yutori(15, weight: .bold))
+                                }
+                                Spacer()
                             }
-                            Spacer()
+                            .frame(height: 48)
+                            .foregroundStyle(Palette.card)
+                            .background(Palette.primary, in: Capsule())
+                            .opacity(viewModel.canSubmit ? 1 : 0.5)
                         }
+                        .buttonStyle(.plain)
+                        .disabled(!viewModel.canSubmit)
+                        .padding(.top, 4)
                     }
-                    .disabled(!viewModel.canSubmit)
+                    .padding(22)
+                    .yutoriCard()
                 }
+                .padding(20)
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 60)
             }
-            .navigationTitle("収支")
         }
+    }
+
+    private func input<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .font(.yutori(15))
+            .foregroundStyle(Palette.foreground)
+            .padding(.horizontal, 14)
+            .frame(height: 42)
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Palette.inputBorder, lineWidth: 1)
+            )
     }
 }
 

@@ -7,39 +7,62 @@ struct DefaultExpenseListView: View {
 
     var body: some View {
         List {
-            if store.items.isEmpty {
-                PlaceholderRow(kind: store.isLoading
-                    ? .loading
-                    : .empty(icon: "arrow.up.circle", message: "デフォルト支出が登録されていません"))
+            Section {
+                ScreenHeading("デフォルト支出")
             }
-            ForEach(store.items) { item in
-                Button {
-                    editingItem = item
-                } label: {
-                    row(item)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+
+            Section {
+                if store.items.isEmpty {
+                    PlaceholderRow(kind: store.isLoading
+                        ? .loading
+                        : .empty(icon: "arrow.up.circle", message: "デフォルト支出が登録されていません"))
                 }
-                .buttonStyle(.plain)
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        Task { try? await store.delete(id: item.id) }
+                ForEach(store.items) { item in
+                    Button {
+                        editingItem = item
                     } label: {
-                        Label("削除", systemImage: "trash")
+                        row(item)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(Palette.card)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            Task { try? await store.delete(id: item.id) }
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
                     }
                 }
             }
+            .listRowSeparatorTint(Palette.rowSeparator)
+
+            Section {
+                YutoriPillButton(title: "＋ デフォルト支出を追加") { showingNewForm = true }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 12, trailing: 4))
 
             if let error = store.errorMessage {
                 Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Palette.background)
         .refreshable { await store.fetch() }
         .task { await store.fetch() }
-        .navigationTitle("デフォルト支出")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingNewForm = true } label: { Image(systemName: "plus") }
+                    .tint(Palette.primaryStrong)
             }
         }
         .sheet(isPresented: $showingNewForm) {
@@ -61,7 +84,9 @@ struct DefaultExpenseListView: View {
     private func row(_ item: DefaultExpense) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(item.name).font(.body)
+                Text(item.name)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
                 Spacer()
                 StateBadge(state: item.state)
             }
@@ -69,25 +94,27 @@ struct DefaultExpenseListView: View {
                 attributeBadge(item.categoryLabel, tint: categoryTint(item.category))
                 attributeBadge(
                     item.isRequired ? "必須" : "任意",
-                    tint: item.isRequired ? .accentColor : .secondary
+                    tint: item.isRequired ? Palette.primaryStrong : Palette.mutedForeground
                 )
                 Spacer()
                 Text(item.amount.yenString)
-                    .font(.caption.monospacedDigit())
+                    .font(.yutori(12.5, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
             }
-            HStack(spacing: 6) {
-                Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
+            Text(verbatim: "毎月\(item.payDay)日 · \(item.methodName) · \(item.account.user) / \(item.account.bank)")
+                .font(.yutori(11.5))
+                .foregroundStyle(Palette.mutedForeground)
             Text(monthsLabel(item.months))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.yutori(11))
+                .foregroundStyle(Palette.mutedForeground)
         }
+        .padding(.vertical, 2)
     }
 
     private func attributeBadge(_ text: String, tint: Color) -> some View {
         Text(text)
-            .font(.caption2.weight(.medium))
+            .font(.yutori(11, weight: .bold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(tint.opacity(0.15), in: Capsule())
@@ -96,9 +123,9 @@ struct DefaultExpenseListView: View {
 
     private func categoryTint(_ category: ExpenseCategory) -> Color {
         switch category {
-        case .fixed: return .blue
-        case .variable: return .orange
-        case .oneTime: return .purple
+        case .fixed: return Palette.stateDecided
+        case .variable: return Palette.accent
+        case .oneTime: return Palette.stateDone
         }
     }
 
