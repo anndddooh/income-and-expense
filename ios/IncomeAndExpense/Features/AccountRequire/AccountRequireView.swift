@@ -56,18 +56,15 @@ struct AccountRequireView: View {
         if let accounts = viewModel.response?.accounts, !accounts.isEmpty {
             VStack(spacing: 0) {
                 ForEach(Array(accounts.enumerated()), id: \.element.id) { index, row in
-                    accountRow(row)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(row.isInsufficient ? Palette.expense.opacity(0.05) : Color.clear)
-                        .overlay(alignment: .leading) {
-                            if row.isInsufficient {
-                                Rectangle()
-                                    .fill(Palette.expense)
-                                    .frame(width: 3)
-                            }
-                        }
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .fill(row.isInsufficient ? Palette.expense : Color.clear)
+                            .frame(width: 3)
+                        accountRow(row)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     if index < accounts.count - 1 {
                         Rectangle()
                             .fill(Palette.rowSeparator)
