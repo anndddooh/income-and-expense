@@ -77,12 +77,12 @@ export default function Dashboard() {
             {month}月の収支
           </div>
           <div
-            className="mt-1.5 text-[44px] leading-none font-extrabold tabular-nums"
+            className="mt-1.5 text-[clamp(30px,10vw,44px)] leading-none font-extrabold whitespace-nowrap tabular-nums"
             style={{ color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}
           >
             {net >= 0 ? '＋' : '−'}¥{Math.abs(net).toLocaleString()}
           </div>
-          <div className="mt-2.5 flex gap-6 text-[13px] text-muted-foreground tabular-nums">
+          <div className="mt-2.5 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-muted-foreground tabular-nums">
             <span>
               収入{' '}
               <span className="font-bold text-foreground">
