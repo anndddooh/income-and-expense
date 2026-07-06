@@ -5,15 +5,11 @@ struct AccountRequireView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
                 ScreenHeading("口座別必要額")
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                    .padding(.horizontal, 4)
 
-            Section {
                 HStack(spacing: 12) {
                     kpiCard(
                         label: "必要額合計",
@@ -26,34 +22,18 @@ struct AccountRequireView: View {
                         color: (viewModel.response?.insufficientSum ?? 0) > 0 ? Palette.expense : Palette.income
                     )
                 }
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
 
-            Section {
-                if let accounts = viewModel.response?.accounts, !accounts.isEmpty {
-                    ForEach(accounts) { row in
-                        accountRow(row)
-                            .listRowBackground(row.isInsufficient ? Palette.expense.opacity(0.08) : Palette.card)
-                    }
-                } else {
-                    PlaceholderRow(kind: viewModel.isLoading
-                        ? .loading
-                        : .empty(icon: "building.columns", message: "データがありません"))
+                listCard
+
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .listRowSeparatorTint(Palette.rowSeparator)
-
-            if let error = viewModel.errorMessage {
-                Section {
-                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
-                }
-                .listRowBackground(Color.clear)
-            }
+            .padding(16)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(Palette.background)
         .refreshable {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
@@ -70,6 +50,35 @@ struct AccountRequireView: View {
     }
 
     private var monthKey: String { "\(monthStore.year)-\(monthStore.month)" }
+
+    @ViewBuilder
+    private var listCard: some View {
+        if let accounts = viewModel.response?.accounts, !accounts.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(accounts.enumerated()), id: \.element.id) { index, row in
+                    accountRow(row)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(row.isInsufficient ? Palette.expense.opacity(0.08) : Color.clear)
+                    if index < accounts.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        } else {
+            VStack {
+                PlaceholderRow(kind: viewModel.isLoading
+                    ? .loading
+                    : .empty(icon: "building.columns", message: "データがありません"))
+            }
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        }
+    }
 
     private func kpiCard(label: String, value: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -133,7 +142,6 @@ struct AccountRequireView: View {
                 }
             }
         }
-        .padding(.vertical, 2)
     }
 
     private func amountText(_ value: Int?) -> String {

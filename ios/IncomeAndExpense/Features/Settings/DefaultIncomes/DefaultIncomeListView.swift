@@ -6,55 +6,24 @@ struct DefaultIncomeListView: View {
     @State private var editingItem: DefaultIncome?
 
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
                 ScreenHeading("デフォルト収入")
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                    .padding(.horizontal, 4)
 
-            Section {
-                if store.items.isEmpty {
-                    PlaceholderRow(kind: store.isLoading
-                        ? .loading
-                        : .empty(icon: "arrow.down.circle", message: "デフォルト収入が登録されていません"))
-                }
-                ForEach(store.items) { item in
-                    Button {
-                        editingItem = item
-                    } label: {
-                        row(item)
-                    }
-                    .buttonStyle(.plain)
-                    .listRowBackground(Palette.card)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            Task { try? await store.delete(id: item.id) }
-                        } label: {
-                            Label("削除", systemImage: "trash")
-                        }
-                    }
-                }
-            }
-            .listRowSeparatorTint(Palette.rowSeparator)
+                listCard
 
-            Section {
                 YutoriPillButton(title: "＋ デフォルト収入を追加", kind: .outline) { showingNewForm = true }
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 12, trailing: 4))
 
-            if let error = store.errorMessage {
-                Section {
-                    Text(error).font(.footnote).foregroundStyle(Palette.expense)
+                if let error = store.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .listRowBackground(Color.clear)
             }
+            .padding(16)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(Palette.background)
         .refreshable { await store.fetch() }
         .task { await store.fetch() }
@@ -81,6 +50,46 @@ struct DefaultIncomeListView: View {
         }
     }
 
+    @ViewBuilder
+    private var listCard: some View {
+        if store.items.isEmpty {
+            VStack {
+                PlaceholderRow(kind: store.isLoading
+                    ? .loading
+                    : .empty(icon: "arrow.down.circle", message: "デフォルト収入が登録されていません"))
+            }
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(store.items.enumerated()), id: \.element.id) { index, item in
+                    Button {
+                        editingItem = item
+                    } label: {
+                        row(item)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            Task { try? await store.delete(id: item.id) }
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
+                    }
+                    if index < store.items.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
+        }
+    }
+
     private func row(_ item: DefaultIncome) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -104,7 +113,6 @@ struct DefaultIncomeListView: View {
                 .font(.yutori(11))
                 .foregroundStyle(Palette.mutedForeground)
         }
-        .padding(.vertical, 2)
     }
 
     private func monthsLabel(_ months: [Int]) -> String {

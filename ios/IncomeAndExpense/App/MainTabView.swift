@@ -108,6 +108,7 @@ private struct MoreView: View {
                 content()
             }
             .yutoriCard()
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }
 
