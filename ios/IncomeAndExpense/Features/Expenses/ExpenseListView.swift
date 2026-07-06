@@ -11,61 +11,31 @@ struct ExpenseListView: View {
 
     var body: some View {
         @Bindable var stateFilter = stateFilter
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                ScreenHeading("支出")
+                    .padding(.horizontal, 4)
+
                 StateFilterChips(selected: $stateFilter.selected)
-            }
+                    .padding(.horizontal, 4)
 
-            Section("支出") {
-                if store.expenses.isEmpty {
-                    PlaceholderRow(kind: store.isLoading
-                        ? .loading
-                        : .empty(icon: "tray", message: "支出の記録がありません"))
-                } else if visibleExpenses.isEmpty {
-                    PlaceholderRow(
-                        kind: .empty(
-                            icon: "line.3.horizontal.decrease.circle",
-                            message: "フィルター条件に一致する支出はありません"
-                        )
-                    )
-                }
-                ForEach(visibleExpenses) { expense in
-                    Button {
-                        editingExpense = expense
-                    } label: {
-                        ExpenseRowView(expense: expense)
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            Task { try? await store.delete(id: expense.id) }
-                        } label: {
-                            Label("削除", systemImage: "trash")
-                        }
-                    }
-                }
-            }
+                listCard
 
-            Section {
-                LabeledContent("当月支出(\(store.expenses.count)件)") {
-                    Text(currentExpenseTotal.yenString)
-                        .font(.body.monospacedDigit())
-                }
-                LabeledContent("当月残高") {
-                    Text(store.balance.yenString)
-                        .font(.body.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(store.balance < 0 ? Palette.expense : .primary)
-                }
-            }
+                totalsLine
+                    .padding(.horizontal, 6)
 
-            if let error = store.errorMessage {
-                Section {
+                YutoriPillButton(title: "＋ 支出を追加") { showingNewForm = true }
+
+                if let error = store.errorMessage {
                     Text(error)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(16)
         }
+        .background(Palette.background)
         .refreshable {
             await store.fetch(year: monthStore.year, month: monthStore.month)
         }
@@ -138,6 +108,80 @@ struct ExpenseListView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var listCard: some View {
+        if store.expenses.isEmpty {
+            VStack {
+                PlaceholderRow(kind: store.isLoading
+                    ? .loading
+                    : .empty(icon: "tray", message: "支出の記録がありません"))
+            }
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        } else if visibleExpenses.isEmpty {
+            VStack {
+                PlaceholderRow(
+                    kind: .empty(
+                        icon: "line.3.horizontal.decrease.circle",
+                        message: "フィルター条件に一致する支出はありません"
+                    )
+                )
+            }
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(visibleExpenses.enumerated()), id: \.element.id) { index, expense in
+                    Button {
+                        editingExpense = expense
+                    } label: {
+                        ExpenseRowView(expense: expense)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            Task { try? await store.delete(id: expense.id) }
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
+                    }
+                    if index < visibleExpenses.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
+        }
+    }
+
+    private var totalsLine: some View {
+        HStack {
+            HStack(spacing: 5) {
+                Text("当月支出(\(store.expenses.count)件)")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(currentExpenseTotal.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
+            }
+            Spacer()
+            HStack(spacing: 5) {
+                Text("当月残高")
+                    .foregroundStyle(Palette.mutedForeground)
+                Text(store.balance.yenString)
+                    .fontWeight(.heavy)
+                    .monospacedDigit()
+                    .foregroundStyle(store.balance < 0 ? Palette.expense : Palette.foreground)
+            }
+        }
+        .font(.yutori(12.5))
     }
 
     private var monthKey: String {

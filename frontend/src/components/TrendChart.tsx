@@ -12,11 +12,11 @@ import type { TrendMonth } from '@/api/trends'
 const chartConfig: ChartConfig = {
   income: {
     label: '収入',
-    color: 'var(--chart-1)',
+    color: 'var(--income)',
   },
   expense: {
     label: '支出',
-    color: 'var(--chart-2)',
+    color: 'var(--accent)',
   },
 }
 
@@ -28,7 +28,7 @@ export default function TrendChart({ data }: { data: TrendMonth[] }) {
   }))
 
   return (
-    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+    <ChartContainer config={chartConfig} className="h-[230px] w-full">
       <BarChart data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="label" tickLine={false} axisLine={false} />
@@ -48,8 +48,8 @@ export default function TrendChart({ data }: { data: TrendMonth[] }) {
           }
         />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-        <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
+        <Bar dataKey="income" fill="var(--income)" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="expense" fill="var(--accent)" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ChartContainer>
   )

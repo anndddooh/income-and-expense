@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 export default function SummaryCard({
@@ -17,14 +10,16 @@ export default function SummaryCard({
   valueClassName?: string
 }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className={cn('text-2xl tabular-nums', valueClassName)}>
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
+    <div className="rounded-card-sm border border-border bg-card px-[22px] py-[18px]">
+      <div className="text-[13px] font-medium text-muted-foreground">{label}</div>
+      <div
+        className={cn(
+          'mt-1.5 text-[26px] font-extrabold tabular-nums',
+          valueClassName,
+        )}
+      >
+        {value}
+      </div>
+    </div>
   )
 }

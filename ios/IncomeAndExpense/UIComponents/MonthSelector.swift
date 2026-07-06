@@ -15,11 +15,11 @@ struct MonthSelector: View {
                     Text(verbatim: "\(month)月")
                         .frame(maxWidth: .infinity, minHeight: 36)
                         .background(
-                            months.contains(month) ? Color.accentColor : Color.gray.opacity(0.15),
-                            in: RoundedRectangle(cornerRadius: 8)
+                            months.contains(month) ? Palette.primary : Palette.segmentTrack,
+                            in: RoundedRectangle(cornerRadius: 10)
                         )
-                        .foregroundStyle(months.contains(month) ? Color.white : Color.primary)
-                        .font(.callout)
+                        .foregroundStyle(months.contains(month) ? Palette.card : Palette.foreground)
+                        .font(.yutori(15, weight: months.contains(month) ? .bold : .regular))
                 }
                 .buttonStyle(.plain)
             }

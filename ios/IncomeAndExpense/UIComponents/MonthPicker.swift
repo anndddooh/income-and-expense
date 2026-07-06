@@ -7,31 +7,36 @@ struct MonthPicker: View {
     @State private var showingSheet = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 16) {
             Button {
                 store.goToPreviousMonth()
             } label: {
                 Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Palette.primaryStrong)
             }
 
             Button {
                 showingSheet = true
             } label: {
-                HStack(spacing: 4) {
-                    Text(verbatim: "\(store.year)年\(store.month)月")
-                        .fontWeight(.semibold)
-                    Image(systemName: "chevron.down")
-                        .font(.caption2)
-                }
+                Text(verbatim: "\(store.year)年\(store.month)月")
+                    .font(.yutori(15, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.foreground)
             }
 
             Button {
                 store.goToNextMonth()
             } label: {
                 Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Palette.primaryStrong)
             }
         }
-        .tint(.primary)
+        .padding(.horizontal, 16)
+        .frame(height: 36)
+        .background(Palette.card, in: Capsule())
+        .overlay(Capsule().stroke(Palette.inputBorder, lineWidth: 1))
         .sheet(isPresented: $showingSheet) {
             MonthPickerSheet(store: store)
                 .presentationDetents([.height(340)])

@@ -6,8 +6,8 @@ struct StateFilterChips: View {
     var body: some View {
         HStack(spacing: 8) {
             Text("状態:")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.yutori(12))
+                .foregroundStyle(Palette.mutedForeground)
             ForEach(InexState.allCases) { state in
                 chip(state)
             }
@@ -17,7 +17,7 @@ struct StateFilterChips: View {
 
     private func chip(_ state: InexState) -> some View {
         let isActive = selected.contains(state)
-        let tint = backgroundColor(state)
+        let tint = Palette.stateColor(state)
         return Button {
             if isActive {
                 if selected.count > 0 {
@@ -28,29 +28,21 @@ struct StateFilterChips: View {
             }
         } label: {
             Text(state.label)
-                .font(.caption2.weight(.medium))
+                .font(.yutori(11.5, weight: .bold))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .foregroundStyle(isActive ? tint : Color.secondary)
+                .foregroundStyle(isActive ? tint : Palette.mutedForeground)
                 .background(
-                    isActive ? tint.opacity(0.18) : Color.clear,
+                    isActive ? tint.opacity(0.16) : Color.clear,
                     in: Capsule()
                 )
                 .overlay(
                     Capsule().stroke(
-                        isActive ? tint.opacity(0.4) : Color.secondary.opacity(0.3),
+                        isActive ? tint.opacity(0.4) : Palette.inputBorder,
                         lineWidth: 1
                     )
                 )
         }
         .buttonStyle(.plain)
-    }
-
-    private func backgroundColor(_ state: InexState) -> Color {
-        switch state {
-        case .undecided: return Palette.pending
-        case .decided: return .accentColor
-        case .done: return Palette.income
-        }
     }
 }

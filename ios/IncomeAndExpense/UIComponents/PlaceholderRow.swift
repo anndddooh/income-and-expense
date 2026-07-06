@@ -30,10 +30,10 @@ struct PlaceholderRow: View {
             VStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.system(size: 38))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Palette.placeholder)
                 Text(message)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .font(.yutori(15))
+                    .foregroundStyle(Palette.mutedForeground)
                     .multilineTextAlignment(.center)
             }
         }

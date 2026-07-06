@@ -6,39 +6,34 @@ struct MethodRequireView: View {
     private let monthStore = MonthStore.shared
 
     var body: some View {
-        List {
-            Section("サマリ") {
-                LabeledContent("必要額合計") {
-                    Text(verbatim: amountText(viewModel.response?.requireSum))
-                        .font(.body.monospacedDigit())
-                }
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                ScreenHeading("支払方法別必要額")
+                    .padding(.horizontal, 4)
 
-            Section("支払方法別") {
-                if let methods = viewModel.response?.methods, !methods.isEmpty {
-                    ForEach(methods) { method in
-                        methodRow(method)
-                    }
-                } else {
-                    PlaceholderRow(kind: viewModel.isLoading
-                        ? .loading
-                        : .empty(icon: "creditcard", message: "データがありません"))
-                }
-            }
+                kpiCard(
+                    label: "必要額合計",
+                    value: amountText(viewModel.response?.requireSum)
+                )
 
-            if let error = viewModel.errorMessage {
-                Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                listCard
+
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(Palette.expense)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(16)
         }
+        .background(Palette.background)
         .refreshable {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
         .task(id: monthKey) {
             await viewModel.fetch(year: monthStore.year, month: monthStore.month)
         }
-        .navigationTitle("支払方法別必要額")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -87,25 +82,73 @@ struct MethodRequireView: View {
 
     private var monthKey: String { "\(monthStore.year)-\(monthStore.month)" }
 
+    @ViewBuilder
+    private var listCard: some View {
+        if let methods = viewModel.response?.methods, !methods.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(methods.enumerated()), id: \.element.id) { index, method in
+                    methodRow(method)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    if index < methods.count - 1 {
+                        Rectangle()
+                            .fill(Palette.rowSeparator)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .yutoriCard()
+        } else {
+            VStack {
+                PlaceholderRow(kind: viewModel.isLoading
+                    ? .loading
+                    : .empty(icon: "creditcard", message: "データがありません"))
+            }
+            .frame(maxWidth: .infinity)
+            .yutoriCard()
+        }
+    }
+
+    private func kpiCard(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.yutori(12))
+                .foregroundStyle(Palette.mutedForeground)
+            Spacer()
+            Text(value)
+                .font(.yutori(19, weight: .heavy))
+                .monospacedDigit()
+                .foregroundStyle(Palette.foreground)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .yutoriCard(radius: 16)
+    }
+
     private func methodRow(_ method: MethodRequireRow) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(method.displayName).font(.body)
+                Text(method.displayName)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
                 Text(method.formedRequire)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(.yutori(12.5, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.mutedForeground)
             }
             Spacer()
             if method.require > 0 {
                 Button {
                     doneTarget = method
                 } label: {
-                    Label("完了", systemImage: "checkmark.circle.fill")
-                        .labelStyle(.iconOnly)
-                        .font(.title3)
+                    Text("一括完了")
+                        .font(.yutori(12, weight: .bold))
+                        .foregroundStyle(Palette.stateDone)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .overlay(Capsule().stroke(Palette.stateDone.opacity(0.5), lineWidth: 1.5))
                 }
-                .buttonStyle(.borderless)
-                .foregroundStyle(Palette.income)
+                .buttonStyle(.plain)
             }
         }
     }

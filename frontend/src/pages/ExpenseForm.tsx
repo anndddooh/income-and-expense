@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import PageHeader from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Segmented } from '@/components/Segmented'
+import { STATE_META } from '@/components/StateIndicator'
 import {
   Form,
   FormControl,
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { card, fieldLabel, pillCancel, pillPrimary } from '@/lib/ui'
 import { applyServerErrors } from '@/lib/form-errors'
 import { createExpense, fetchExpense, updateExpense } from '@/api/expenses'
 import { fetchMethods } from '@/api/methods'
@@ -40,11 +41,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const STATES = [
-  { value: '0', label: '未定' },
-  { value: '1', label: '確定' },
-  { value: '2', label: '完了' },
+const STATE_OPTS = [
+  { value: '0', label: '未定', activeColor: STATE_META[0].color },
+  { value: '1', label: '確定', activeColor: STATE_META[1].color },
+  { value: '2', label: '完了', activeColor: STATE_META[2].color },
 ]
+
+const inputCls = 'h-[42px] rounded-input bg-white'
 
 const FIELDS = ['name', 'pay_date', 'method', 'amount', 'state', 'memo'] as const
 
@@ -137,47 +140,47 @@ export default function ExpenseForm() {
   })
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-2xl">
       <PageHeader
         title={isEdit ? '支出を編集' : '支出を追加'}
         description={`${year}年${month}月`}
       />
-      <Card>
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form
-              className="space-y-4"
-              onSubmit={form.handleSubmit((v) => {
-                form.clearErrors('root')
-                mut.mutate(v)
-              })}
-            >
-              {!isEdit && templates.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">簡易入力</label>
-                  <Select onValueChange={applyTemplate}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="テンプレートを選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map((t) => (
-                        <SelectItem key={t.id} value={String(t.id)}>
-                          {t.template_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+      <div className={`${card} p-[26px]`}>
+        <Form {...form}>
+          <form
+            className="grid gap-4"
+            onSubmit={form.handleSubmit((v) => {
+              form.clearErrors('root')
+              mut.mutate(v)
+            })}
+          >
+            {!isEdit && templates.length > 0 && (
+              <div className="grid gap-1.5">
+                <label className={fieldLabel}>簡易入力</label>
+                <Select onValueChange={applyTemplate}>
+                  <SelectTrigger className={inputCls}>
+                    <SelectValue placeholder="テンプレートを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.template_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>名称</FormLabel>
+                    <FormLabel className={fieldLabel}>名称</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input className={inputCls} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,26 +191,29 @@ export default function ExpenseForm() {
                 name="pay_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>支払日</FormLabel>
+                    <FormLabel className={fieldLabel}>支払日</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" className={inputCls} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="method"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>支払方法</FormLabel>
+                    <FormLabel className={fieldLabel}>支払方法</FormLabel>
                     <Select
                       value={field.value ? String(field.value) : undefined}
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={inputCls}>
                           <SelectValue placeholder="選択" />
                         </SelectTrigger>
                       </FormControl>
@@ -228,11 +234,12 @@ export default function ExpenseForm() {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>金額</FormLabel>
+                    <FormLabel className={fieldLabel}>金額</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={0}
+                        className={inputCls}
                         {...field}
                         value={field.value === 0 ? '' : field.value}
                         onChange={(e) =>
@@ -246,69 +253,74 @@ export default function ExpenseForm() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>状態</FormLabel>
-                    <Select
+            </div>
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={fieldLabel}>状態</FormLabel>
+                  <FormControl>
+                    <Segmented
                       value={String(field.value)}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {STATES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="memo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>メモ</FormLabel>
-                    <FormControl>
-                      <Textarea rows={4} {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {form.formState.errors.root && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.root.message}
-                </p>
+                      onChange={(v) => field.onChange(Number(v))}
+                      options={STATE_OPTS}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
+            <FormField
+              control={form.control}
+              name="memo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={fieldLabel}>
+                    メモ{' '}
+                    <span className="font-medium text-muted-foreground">
+                      (任意)
+                    </span>
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={3}
+                      className="rounded-input bg-white"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={mut.isPending}>
-                  {isEdit ? '更新' : '追加'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(`/expenses/${year}/${month}`)}
-                >
-                  キャンセル
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            {form.formState.errors.root && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.root.message}
+              </p>
+            )}
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="submit"
+                className={pillPrimary}
+                disabled={mut.isPending}
+              >
+                {isEdit ? '更新する' : '追加する'}
+              </button>
+              <button
+                type="button"
+                className={pillCancel}
+                onClick={() => navigate(`/expenses/${year}/${month}`)}
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   )
 }

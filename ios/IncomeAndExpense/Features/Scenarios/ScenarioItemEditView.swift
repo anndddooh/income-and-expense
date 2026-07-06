@@ -64,7 +64,7 @@ struct ScenarioItemEditView: View {
                             Spacer()
                             Text("過去3ヶ月平均: ¥\(avg.average.formattedComma) (\(avg.count)件)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Palette.mutedForeground)
                         }
                     }
                     Picker("支払日", selection: $draft.payDay) {
@@ -86,18 +86,24 @@ struct ScenarioItemEditView: View {
 
                 if let error = errorMessage {
                     Section {
-                        Text(error).font(.footnote).foregroundStyle(.red)
+                        Text(error).font(.footnote).foregroundStyle(Palette.expense)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Palette.background)
             .navigationTitle(draft.itemID == nil ? "項目を追加" : "項目を編集")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
+                        .fontWeight(.bold)
+                        .tint(Palette.mutedForeground2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { Task { await save() } }
+                        .fontWeight(.bold)
+                        .tint(Palette.primaryStrong)
                         .disabled(isSaving || draft.name.isEmpty)
                 }
             }

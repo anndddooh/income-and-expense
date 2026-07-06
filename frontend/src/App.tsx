@@ -1,10 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import AccountRequire from '@/pages/AccountRequire'
 import Balance from '@/pages/Balance'
 import Dashboard from '@/pages/Dashboard'
 import DefaultExpenseForm from '@/pages/DefaultExpenseForm'
@@ -18,12 +23,19 @@ import IncomeList from '@/pages/IncomeList'
 import LoanForm from '@/pages/LoanForm'
 import LoanList from '@/pages/LoanList'
 import Login from '@/pages/Login'
-import MethodRequire from '@/pages/MethodRequire'
+import Requires from '@/pages/Requires'
 import ScenarioDetail from '@/pages/ScenarioDetail'
 import ScenarioList from '@/pages/ScenarioList'
 import Settings from '@/pages/Settings'
 
 const queryClient = new QueryClient()
+
+/** 旧必要額URLを新しい統合ページへリダイレクト。 */
+function RequireRedirect({ tab }: { tab?: 'method' }) {
+  const { year, month } = useParams<{ year: string; month: string }>()
+  const suffix = tab === 'method' ? '?tab=method' : ''
+  return <Navigate to={`/requires/${year}/${month}${suffix}`} replace />
+}
 
 export default function App() {
   return (
@@ -52,13 +64,14 @@ export default function App() {
               <Route path="/loans/:year/:month" element={<LoanList />} />
               <Route path="/loans/:year/:month/new" element={<LoanForm />} />
               <Route path="/loans/:year/:month/:id/edit" element={<LoanForm />} />
+              <Route path="/requires/:year/:month" element={<Requires />} />
               <Route
                 path="/account_require/:year/:month"
-                element={<AccountRequire />}
+                element={<RequireRedirect />}
               />
               <Route
                 path="/method_require/:year/:month"
-                element={<MethodRequire />}
+                element={<RequireRedirect tab="method" />}
               />
               <Route path="/settings" element={<Settings />} />
               <Route

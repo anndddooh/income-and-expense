@@ -4,26 +4,23 @@ struct IncomeRowView: View {
     let income: Income
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
+        HStack(spacing: 11) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(income.name)
-                    .font(.body)
-                    .fontWeight(.medium)
-                Text(verbatim: income.payDate.japaneseMonthDay)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(verbatim: "\(income.methodName) · \(income.account.user) / \(income.account.bank)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.yutori(15, weight: .bold))
+                    .foregroundStyle(Palette.foreground)
+                Text(verbatim: "\(income.payDate.japaneseDay) · \(income.methodName) · \(income.account.user) / \(income.account.bank)")
+                    .font(.yutori(11.5))
+                    .foregroundStyle(Palette.mutedForeground)
             }
             Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 3) {
                 Text(income.amount.yenString)
-                    .font(.callout.weight(.semibold))
+                    .font(.yutori(14.5, weight: .bold))
                     .monospacedDigit()
+                    .foregroundStyle(Palette.income)
                 StateBadge(state: income.state)
             }
         }
-        .padding(.vertical, 2)
     }
 }

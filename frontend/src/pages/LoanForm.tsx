@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import PageHeader from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Segmented } from '@/components/Segmented'
+import { STATE_META } from '@/components/StateIndicator'
 import {
   Form,
   FormControl,
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { card, fieldLabel, pillCancel, pillPrimary } from '@/lib/ui'
 import { applyServerErrors } from '@/lib/form-errors'
 import { createLoan, fetchLoan, updateLoan } from '@/api/loans'
 import { fetchMethods } from '@/api/methods'
@@ -54,11 +55,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const STATES = [
-  { value: '0', label: '未定' },
-  { value: '1', label: '確定' },
-  { value: '2', label: '完了' },
+const STATE_OPTS = [
+  { value: '0', label: '未定', activeColor: STATE_META[0].color },
+  { value: '1', label: '確定', activeColor: STATE_META[1].color },
+  { value: '2', label: '完了', activeColor: STATE_META[2].color },
 ]
+
+const selectCls = 'h-[42px] rounded-input bg-white'
 
 const FIELDS = [
   'name',
@@ -151,10 +154,9 @@ export default function LoanForm() {
   })
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-2xl">
       <PageHeader title={isEdit ? 'ローンを編集' : 'ローンを追加'} />
-      <Card>
-        <CardContent className="pt-6">
+      <div className={`${card} p-[26px]`}>
           <Form {...form}>
             <form
               className="space-y-4"
@@ -310,7 +312,7 @@ export default function LoanForm() {
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className={selectCls}>
                           <SelectValue placeholder="選択" />
                         </SelectTrigger>
                       </FormControl>
@@ -377,24 +379,14 @@ export default function LoanForm() {
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>状態</FormLabel>
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {STATES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className={fieldLabel}>状態</FormLabel>
+                    <FormControl>
+                      <Segmented
+                        value={String(field.value)}
+                        onChange={(v) => field.onChange(Number(v))}
+                        options={STATE_OPTS}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -406,22 +398,25 @@ export default function LoanForm() {
                 </p>
               )}
 
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={mut.isPending}>
-                  {isEdit ? '更新' : '追加'}
-                </Button>
-                <Button
+              <div className="flex gap-2.5 pt-1">
+                <button
+                  type="submit"
+                  className={pillPrimary}
+                  disabled={mut.isPending}
+                >
+                  {isEdit ? '更新する' : '追加する'}
+                </button>
+                <button
                   type="button"
-                  variant="outline"
+                  className={pillCancel}
                   onClick={() => navigate(`/loans/${year}/${month}`)}
                 >
                   キャンセル
-                </Button>
+                </button>
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

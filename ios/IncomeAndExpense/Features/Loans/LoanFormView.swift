@@ -28,11 +28,7 @@ struct LoanFormView: View {
                             Text(verbatim: "\(day)日").tag(day)
                         }
                     }
-                    Picker("状態", selection: $viewModel.state) {
-                        ForEach(InexState.allCases) { state in
-                            Text(state.label).tag(state)
-                        }
-                    }
+                    StatePickerRow(state: $viewModel.state)
                 }
 
                 Section("期間") {
@@ -81,15 +77,19 @@ struct LoanFormView: View {
                     Section {
                         Text(error)
                             .font(.footnote)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Palette.expense)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Palette.background)
             .navigationTitle(viewModel.isEdit ? "ローンを編集" : "新しいローン")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
+                        .fontWeight(.bold)
+                        .tint(Palette.mutedForeground2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -101,6 +101,8 @@ struct LoanFormView: View {
                             }
                         }
                     }
+                    .fontWeight(.bold)
+                    .tint(Palette.primaryStrong)
                     .disabled(viewModel.isSaving)
                 }
             }

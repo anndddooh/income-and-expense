@@ -7,6 +7,8 @@ final class DashboardViewModel {
     var currentIncome: Int = 0
     var currentExpense: Int = 0
     var prevBalance: Int = 0
+    var balanceSum: Int? = nil
+    var shortfall: Int? = nil
     var isLoading: Bool = false
     var errorMessage: String? = nil
 
@@ -46,6 +48,17 @@ final class DashboardViewModel {
         } catch {
             errorMessage = (error as? AppError)?.errorDescription ?? error.localizedDescription
         }
+
+        // KPI (口座残高合計 / 不足額) はベストエフォートで取得し、
+        // 失敗してもメイン表示を妨げない。
+        async let balanceFetch: BalanceResponse = APIClient.shared.request(
+            APIEndpoint(path: "/balance/", queryItems: queryItems)
+        )
+        async let requireFetch: AccountRequireResponse = APIClient.shared.request(
+            APIEndpoint(path: "/account_require/", queryItems: queryItems)
+        )
+        balanceSum = (try? await balanceFetch)?.balanceSum
+        shortfall = (try? await requireFetch)?.insufficientSum
     }
 
     var currentBalance: Int {
