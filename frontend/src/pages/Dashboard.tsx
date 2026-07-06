@@ -71,7 +71,7 @@ export default function Dashboard() {
       <PageHeader title="ホーム" description={`${month}月のサマリ`} />
 
       {/* hero + KPI */}
-      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
         <div className={cn(card, 'p-7')}>
           <div className="text-[14px] font-medium text-muted-foreground">
             {month}月の収支
@@ -121,8 +121,8 @@ export default function Dashboard() {
       </div>
 
       {/* chart + recent */}
-      <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
-        <div className={cn(card, 'p-[22px]')}>
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
+        <div className={cn(card, 'min-w-0 p-[22px]')}>
           <div className="flex items-baseline justify-between">
             <span className="text-[15px] font-extrabold">月ごとのながれ</span>
             <div className="flex gap-3.5">
