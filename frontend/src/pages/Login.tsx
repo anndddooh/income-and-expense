@@ -51,9 +51,11 @@ export default function Login() {
     <div className="flex min-h-svh items-center justify-center bg-background p-4">
       <div className={`${card} w-full max-w-[380px] p-[30px]`}>
         <div className="mb-6 flex flex-col items-center gap-2.5">
-          <span className="flex size-11 items-center justify-center rounded-[13px] bg-primary text-[21px] font-extrabold text-primary-foreground">
-            家
-          </span>
+          <img
+            src="/icon-rounded-96.png"
+            alt="INEX"
+            className="size-11 rounded-[13px]"
+          />
           <div className="text-[18px] font-extrabold">INEX にログイン</div>
           <div className="text-[12.5px] text-muted-foreground">
             わが家の家計簿へおかえりなさい

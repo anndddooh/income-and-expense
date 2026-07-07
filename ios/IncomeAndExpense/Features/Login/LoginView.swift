@@ -11,11 +11,11 @@ struct LoginView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     VStack(spacing: 10) {
-                        Text("家")
-                            .font(.yutori(28, weight: .heavy))
-                            .foregroundStyle(Palette.card)
+                        Image("AppLogo")
+                            .resizable()
+                            .scaledToFit()
                             .frame(width: 60, height: 60)
-                            .background(Palette.primary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         Text("INEX にログイン")
                             .font(.yutori(21, weight: .heavy))
                             .foregroundStyle(Palette.foreground)
