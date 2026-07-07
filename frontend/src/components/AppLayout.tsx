@@ -252,9 +252,11 @@ export default function AppLayout() {
             <SheetContent side="right" className="w-[260px] bg-card p-0">
               <SheetHeader className="border-b border-border px-4 py-4">
                 <SheetTitle className="flex items-center gap-2.5 text-left">
-                  <span className="flex size-7 items-center justify-center rounded-[8px] bg-primary text-[14px] font-extrabold text-primary-foreground">
-                    家
-                  </span>
+                  <img
+                    src="/icon-rounded-96.png"
+                    alt="INEX"
+                    className="size-7 rounded-[8px]"
+                  />
                   <span className="text-[15px] font-extrabold">INEX</span>
                 </SheetTitle>
               </SheetHeader>
