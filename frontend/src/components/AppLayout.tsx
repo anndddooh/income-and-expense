@@ -127,9 +127,11 @@ export default function AppLayout() {
         <div className="flex h-[60px] items-center gap-3 px-4 md:gap-7 md:px-7">
           {/* logo */}
           <Link to="/" className="flex shrink-0 items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-[8px] bg-primary text-[14px] font-extrabold text-primary-foreground">
-              家
-            </span>
+            <img
+              src="/icon-rounded-96.png"
+              alt="INEX"
+              className="size-7 rounded-[8px]"
+            />
             <span className="text-[15px] font-extrabold tracking-wide">
               INEX
             </span>
