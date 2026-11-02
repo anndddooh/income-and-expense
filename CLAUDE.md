@@ -25,7 +25,10 @@
 - 原則: 検証ブランチ → ステージング/プレビュー、`main` → 本番。両者を分離し、検証が本番データ・本番URLを汚さないようにする
 
 <!-- BEGIN claude-knowledge (distill 自動管理 / この外側は温存) -->
-## 既知の決定・ハマり所（自動蒸留 / 2026-07-09 更新）
+## 既知の決定・ハマり所（自動蒸留 / 2026-10-22 更新）
+- **本番への単発操作は `dokku run`**: `ssh dokku@167.172.65.18 run income-and-expense python manage.py shell < script.py` は標準入力が届かず**黙って何も実行されない**。スクリプトは引数で渡し（コンテナ側で引用符が二重評価されるためコード中のダブルクォート不可）、実行後は読み取り専用クエリで結果を確認する。
+- **過去月にはデフォルト収入/支出を追加できない**（`api_views.py` の `_can_add_default`、仕様）。過去月への補正は本番 Django shell でガードのみ外して `add_defaults` 相当を呼ぶ（同名項目はスキップされる）。
+- **本番 SSH の鍵はパスフレーズ付き**: ssh-agent 未登録だと `Permission denied (publickey)`。ユーザーに端末で `ssh-add --apple-use-keychain ~/.ssh/id_ed25519` してもらう（パスフレーズはチャットに貼らせない）。
 - **デプロイは push で自動化されている**: フロント(Cloudflare)・iOS(Xcode Cloud)・バック(Dokku リモートへの push)いずれも push で自動ビルド・デプロイが走る。GitHub Actions が無いからと「CI 無し・手動 `wrangler deploy` 必要」と誤認しない（上の TODO はこの自動化に加えて、検証ブランチ用の**別ステージング**を整備する話）。
 - **ブランチ運用**: 作業ブランチ → develop へ `--no-ff` マージ → push（自動ビルドでステージング確認）→ 承認後 develop → main + タグ（`Ver3.x` 系）。**タグを打ったら `origin` に push する**（`git push origin main` と `git push origin <tag>`。push で本番の自動デプロイが走る）。
 - **App Store Connect アップロードは iOS 26 SDK 必須 → Xcode Cloud のみ有効**: Xcode 15.2 (iOS 17.2 SDK) から直接アップロードすると `"built with the iOS 17.2 SDK. All iOS and iPadOS apps must be built with the iOS 26 SDK or later"` エラーになる。Xcode 26 は macOS Sonoma 以降が必要（MacBook Pro 2017 は Ventura が上限）→ Xcode Cloud 経由のみ。USB 実機デバッグも同様に DDI ミスマッチで不可。
