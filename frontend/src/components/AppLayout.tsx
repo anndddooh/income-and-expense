@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Menu, Settings as SettingsIcon } from 'lucide-react'
 import {
   Link,
@@ -28,6 +29,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { todayYearMonth } from '@/util/date'
+import { fetchMethods } from '@/api/methods'
 
 type NavItem = {
   label: string
@@ -96,6 +98,8 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { year, month } = useCurrentYearMonth()
   const [menuOpen, setMenuOpen] = useState(false)
+  // 各フォームの支払方法セレクトで使うので先読みしておく（編集画面を開いた瞬間に選択肢が揃う）
+  useQuery({ queryKey: ['methods'], queryFn: fetchMethods })
 
   const seg = location.pathname.split('/').filter(Boolean)
   const currentBase = seg[0] ? `/${seg[0]}` : '/dashboard'
