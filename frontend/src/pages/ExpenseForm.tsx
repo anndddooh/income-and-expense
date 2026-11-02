@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
@@ -28,6 +28,9 @@ import { card, fieldLabel, pillCancel, pillPrimary } from '@/lib/ui'
 import { applyServerErrors } from '@/lib/form-errors'
 import { createExpense, fetchExpense, updateExpense } from '@/api/expenses'
 import { fetchMethods } from '@/api/methods'
+import type { Expense } from '@/api/expenses'
+import FormSkeleton from '@/components/FormSkeleton'
+import { initialFromList } from '@/lib/query-cache'
 import { fetchTemplateExpenses } from '@/api/template-expenses'
 
 const schema = z.object({
@@ -93,11 +96,14 @@ export default function ExpenseForm() {
   const { data: existing } = useQuery({
     queryKey: ['expense', itemId],
     queryFn: () => fetchExpense(itemId!),
+    ...initialFromList<Expense>(qc, ['expenses', year, month], itemId),
     enabled: isEdit,
   })
 
+  // 一覧キャッシュ/詳細APIと支払方法が揃ってから一度だけ復元し、それまではフォームを出さない
+  const [restored, setRestored] = useState(!isEdit)
   useEffect(() => {
-    if (existing && methods.length > 0) {
+    if (!restored && existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_date: existing.pay_date,
@@ -106,8 +112,9 @@ export default function ExpenseForm() {
         state: existing.state,
         memo: existing.memo ?? '',
       })
+      setRestored(true)
     }
-  }, [existing, methods.length, form])
+  }, [existing, methods.length, form, restored])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
@@ -146,180 +153,184 @@ export default function ExpenseForm() {
         description={`${year}年${month}月`}
       />
       <div className={`${card} p-[26px]`}>
-        <Form {...form}>
-          <form
-            className="grid gap-4"
-            onSubmit={form.handleSubmit((v) => {
-              form.clearErrors('root')
-              mut.mutate(v)
-            })}
-          >
-            {!isEdit && templates.length > 0 && (
-              <div className="grid gap-1.5">
-                <label className={fieldLabel}>簡易入力</label>
-                <Select onValueChange={applyTemplate}>
-                  <SelectTrigger className={inputCls}>
-                    <SelectValue placeholder="テンプレートを選択" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map((t) => (
-                      <SelectItem key={t.id} value={String(t.id)}>
-                        {t.template_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+        {restored ? (
+          <Form {...form}>
+            <form
+              className="grid gap-4"
+              onSubmit={form.handleSubmit((v) => {
+                form.clearErrors('root')
+                mut.mutate(v)
+              })}
+            >
+              {!isEdit && templates.length > 0 && (
+                <div className="grid gap-1.5">
+                  <label className={fieldLabel}>簡易入力</label>
+                  <Select onValueChange={applyTemplate}>
+                    <SelectTrigger className={inputCls}>
+                      <SelectValue placeholder="テンプレートを選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.template_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={fieldLabel}>名称</FormLabel>
-                    <FormControl>
-                      <Input className={inputCls} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pay_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={fieldLabel}>支払日</FormLabel>
-                    <FormControl>
-                      <Input type="date" className={inputCls} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="method"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={fieldLabel}>支払方法</FormLabel>
-                    <Select
-                      value={field.value ? String(field.value) : undefined}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={fieldLabel}>名称</FormLabel>
                       <FormControl>
-                        <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="選択" />
-                        </SelectTrigger>
+                        <Input className={inputCls} {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {methods.map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            {m.display_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pay_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={fieldLabel}>支払日</FormLabel>
+                      <FormControl>
+                        <Input type="date" className={inputCls} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={fieldLabel}>支払方法</FormLabel>
+                      <Select
+                        value={field.value ? String(field.value) : undefined}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={inputCls}>
+                            <SelectValue placeholder="選択" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {methods.map((m) => (
+                            <SelectItem key={m.id} value={String(m.id)}>
+                              {m.display_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={fieldLabel}>金額</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          className={inputCls}
+                          {...field}
+                          value={field.value === 0 ? '' : field.value}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="amount"
+                name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={fieldLabel}>金額</FormLabel>
+                    <FormLabel className={fieldLabel}>状態</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        className={inputCls}
-                        {...field}
-                        value={field.value === 0 ? '' : field.value}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === '' ? 0 : Number(e.target.value)
-                          )
-                        }
+                      <Segmented
+                        value={String(field.value)}
+                        onChange={(v) => field.onChange(Number(v))}
+                        options={STATE_OPTS}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+              <FormField
+                control={form.control}
+                name="memo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={fieldLabel}>
+                      メモ{' '}
+                      <span className="font-medium text-muted-foreground">
+                        (任意)
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={3}
+                        className="rounded-input bg-white"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={fieldLabel}>状態</FormLabel>
-                  <FormControl>
-                    <Segmented
-                      value={String(field.value)}
-                      onChange={(v) => field.onChange(Number(v))}
-                      options={STATE_OPTS}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {form.formState.errors.root && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.root.message}
+                </p>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="memo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={fieldLabel}>
-                    メモ{' '}
-                    <span className="font-medium text-muted-foreground">
-                      (任意)
-                    </span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      rows={3}
-                      className="rounded-input bg-white"
-                      {...field}
-                      value={field.value ?? ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {form.formState.errors.root && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.root.message}
-              </p>
-            )}
-
-            <div className="flex gap-2.5 pt-1">
-              <button
-                type="submit"
-                className={pillPrimary}
-                disabled={mut.isPending}
-              >
-                {isEdit ? '更新する' : '追加する'}
-              </button>
-              <button
-                type="button"
-                className={pillCancel}
-                onClick={() => navigate(`/expenses/${year}/${month}`)}
-              >
-                キャンセル
-              </button>
-            </div>
-          </form>
-        </Form>
+              <div className="flex gap-2.5 pt-1">
+                <button
+                  type="submit"
+                  className={pillPrimary}
+                  disabled={mut.isPending}
+                >
+                  {isEdit ? '更新する' : '追加する'}
+                </button>
+                <button
+                  type="button"
+                  className={pillCancel}
+                  onClick={() => navigate(`/expenses/${year}/${month}`)}
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <FormSkeleton />
+        )}
       </div>
     </div>
   )
