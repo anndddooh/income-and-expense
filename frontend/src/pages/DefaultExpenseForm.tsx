@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
@@ -33,6 +33,9 @@ import {
   type ExpenseCategoryValue,
 } from '@/api/default-expenses'
 import { fetchMethods } from '@/api/methods'
+import type { DefaultExpense } from '@/api/default-expenses'
+import FormSkeleton from '@/components/FormSkeleton'
+import { initialFromList } from '@/lib/query-cache'
 
 const schema = z.object({
   name: z.string().min(1, '名称は必須です'),
@@ -100,11 +103,14 @@ export default function DefaultExpenseForm() {
   const { data: existing } = useQuery({
     queryKey: ['default-expense', itemId],
     queryFn: () => fetchDefaultExpense(itemId!),
+    ...initialFromList<DefaultExpense>(qc, ['default-expenses'], itemId),
     enabled: isEdit,
   })
 
+  // 一覧キャッシュ/詳細APIと支払方法が揃ってから一度だけ復元し、それまではフォームを出さない
+  const [restored, setRestored] = useState(!isEdit)
   useEffect(() => {
-    if (existing && methods.length > 0) {
+    if (!restored && existing && methods.length > 0) {
       form.reset({
         name: existing.name,
         pay_day: existing.pay_day,
@@ -115,8 +121,9 @@ export default function DefaultExpenseForm() {
         category: existing.category,
         is_required: existing.is_required,
       })
+      setRestored(true)
     }
-  }, [existing, methods.length, form])
+  }, [existing, methods.length, form, restored])
 
   useEffect(() => {
     if (!isEdit && form.getValues('method') === 0 && methods[0]) {
@@ -149,239 +156,243 @@ export default function DefaultExpenseForm() {
     <div className="max-w-xl">
       <PageHeader title={isEdit ? 'デフォルト支出を編集' : 'デフォルト支出を追加'} />
       <div className={`${card} p-[26px]`}>
-          <Form {...form}>
-            <form
-              className="space-y-4"
-              onSubmit={form.handleSubmit((v) => {
-                form.clearErrors('root')
-                mut.mutate(v)
-              })}
-            >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>名称</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pay_day"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>支払日 (1-28)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={28}
-                        {...field}
-                        value={field.value === 0 ? '' : field.value}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === '' ? 0 : Number(e.target.value)
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="method"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>支払方法</FormLabel>
-                    <Select
-                      value={field.value ? String(field.value) : undefined}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger className={selectCls}>
-                          <SelectValue placeholder="選択" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {methods.map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            {m.display_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>金額</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...field}
-                        value={field.value === 0 ? '' : field.value}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === '' ? 0 : Number(e.target.value)
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={fieldLabel}>状態</FormLabel>
-                    <FormControl>
-                      <Segmented
-                        value={String(field.value)}
-                        onChange={(v) => field.onChange(Number(v))}
-                        options={STATE_OPTS}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>費目区分</FormLabel>
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger className={selectCls}>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CATEGORIES.map((c) => (
-                          <SelectItem key={c.value} value={c.value}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="is_required"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>必須／任意</FormLabel>
-                    <Select
-                      value={field.value ? 'required' : 'optional'}
-                      onValueChange={(v) => field.onChange(v === 'required')}
-                    >
-                      <FormControl>
-                        <SelectTrigger className={selectCls}>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="required">必須</SelectItem>
-                        <SelectItem value="optional">任意</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="months"
-                render={({ field }) => {
-                  const selected = new Set(field.value)
-                  const toggle = (m: number) => {
-                    const next = new Set(selected)
-                    if (next.has(m)) next.delete(m)
-                    else next.add(m)
-                    field.onChange(Array.from(next).sort((a, b) => a - b))
-                  }
-                  const setAll = () => field.onChange([...MONTH_OPTIONS])
-                  const clearAll = () => field.onChange([])
-                  return (
+          {restored ? (
+            <Form {...form}>
+              <form
+                className="space-y-4"
+                onSubmit={form.handleSubmit((v) => {
+                  form.clearErrors('root')
+                  mut.mutate(v)
+                })}
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel>適用月</FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {MONTH_OPTIONS.map((m) => {
-                          const active = selected.has(m)
-                          return (
-                            <button
-                              key={m}
-                              type="button"
-                              onClick={() => toggle(m)}
-                              className={cn(
-                                'h-8 w-12 rounded-full border text-[13px] font-bold transition-colors',
-                                active
-                                  ? 'border-primary bg-primary text-primary-foreground'
-                                  : 'border-input bg-white text-muted-foreground-2 hover:bg-primary-soft/40'
-                              )}
-                            >
-                              {m}月
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <button type="button" className={pillOutlineSm} onClick={setAll}>
-                          全選択
-                        </button>
-                        <button type="button" className={pillOutlineSm} onClick={clearAll}>
-                          クリア
-                        </button>
-                      </div>
+                      <FormLabel>名称</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )
-                }}
-              />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pay_day"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>支払日 (1-28)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={28}
+                          {...field}
+                          value={field.value === 0 ? '' : field.value}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>支払方法</FormLabel>
+                      <Select
+                        value={field.value ? String(field.value) : undefined}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={selectCls}>
+                            <SelectValue placeholder="選択" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {methods.map((m) => (
+                            <SelectItem key={m.id} value={String(m.id)}>
+                              {m.display_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>金額</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          {...field}
+                          value={field.value === 0 ? '' : field.value}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === '' ? 0 : Number(e.target.value)
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={fieldLabel}>状態</FormLabel>
+                      <FormControl>
+                        <Segmented
+                          value={String(field.value)}
+                          onChange={(v) => field.onChange(Number(v))}
+                          options={STATE_OPTS}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>費目区分</FormLabel>
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={selectCls}>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CATEGORIES.map((c) => (
+                            <SelectItem key={c.value} value={c.value}>
+                              {c.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="is_required"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>必須／任意</FormLabel>
+                      <Select
+                        value={field.value ? 'required' : 'optional'}
+                        onValueChange={(v) => field.onChange(v === 'required')}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={selectCls}>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="required">必須</SelectItem>
+                          <SelectItem value="optional">任意</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="months"
+                  render={({ field }) => {
+                    const selected = new Set(field.value)
+                    const toggle = (m: number) => {
+                      const next = new Set(selected)
+                      if (next.has(m)) next.delete(m)
+                      else next.add(m)
+                      field.onChange(Array.from(next).sort((a, b) => a - b))
+                    }
+                    const setAll = () => field.onChange([...MONTH_OPTIONS])
+                    const clearAll = () => field.onChange([])
+                    return (
+                      <FormItem>
+                        <FormLabel>適用月</FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          {MONTH_OPTIONS.map((m) => {
+                            const active = selected.has(m)
+                            return (
+                              <button
+                                key={m}
+                                type="button"
+                                onClick={() => toggle(m)}
+                                className={cn(
+                                  'h-8 w-12 rounded-full border text-[13px] font-bold transition-colors',
+                                  active
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'border-input bg-white text-muted-foreground-2 hover:bg-primary-soft/40'
+                                )}
+                              >
+                                {m}月
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <div className="mt-2 flex gap-2">
+                          <button type="button" className={pillOutlineSm} onClick={setAll}>
+                            全選択
+                          </button>
+                          <button type="button" className={pillOutlineSm} onClick={clearAll}>
+                            クリア
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )
+                  }}
+                />
 
-              {form.formState.errors.root && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.root.message}
-                </p>
-              )}
+                {form.formState.errors.root && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.root.message}
+                  </p>
+                )}
 
-              <div className="flex gap-2.5 pt-1">
-                <button type="submit" className={pillPrimary} disabled={mut.isPending}>
-                  {isEdit ? '更新する' : '追加する'}
-                </button>
-                <button
-                  type="button"
-                  className={pillCancel}
-                  onClick={() => navigate('/settings/default-expenses')}
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </Form>
+                <div className="flex gap-2.5 pt-1">
+                  <button type="submit" className={pillPrimary} disabled={mut.isPending}>
+                    {isEdit ? '更新する' : '追加する'}
+                  </button>
+                  <button
+                    type="button"
+                    className={pillCancel}
+                    onClick={() => navigate('/settings/default-expenses')}
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </Form>
+          ) : (
+            <FormSkeleton />
+          )}
       </div>
     </div>
   )
