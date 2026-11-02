@@ -24,6 +24,11 @@ struct MainTabView: View {
                 .tabItem { Label("その他", systemImage: "ellipsis.circle.fill") }
         }
         .tint(Palette.primaryStrong)
+        .task {
+            // フォームの選択肢を先読みし、開いた瞬間に揃っているようにする
+            await MethodsStore.shared.loadIfNeeded()
+            await TemplateExpensesStore.shared.loadIfNeeded()
+        }
     }
 
     /// ナビバー・タブバーの背景を「ゆとり」テーマに合わせる。
