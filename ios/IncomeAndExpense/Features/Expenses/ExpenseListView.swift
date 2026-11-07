@@ -145,7 +145,7 @@ struct ExpenseListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button(role: .destructive) {
-                            Task { try? await store.delete(id: expense.id) }
+                            Task { await delete(id: expense.id) }
                         } label: {
                             Label("削除", systemImage: "trash")
                         }
@@ -203,6 +203,17 @@ struct ExpenseListView: View {
             )
             addedCount = added
             Haptics.success()
+        } catch {
+            store.errorMessage = (error as? AppError)?.errorDescription
+                ?? error.localizedDescription
+        }
+    }
+
+    /// 削除後は当月残高もサーバ計算値に合わせるため再取得する。失敗時はエラーを表示する。
+    private func delete(id: Int) async {
+        do {
+            try await store.delete(id: id)
+            await store.fetch(year: monthStore.year, month: monthStore.month)
         } catch {
             store.errorMessage = (error as? AppError)?.errorDescription
                 ?? error.localizedDescription
