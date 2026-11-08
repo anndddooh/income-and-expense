@@ -831,3 +831,15 @@ class JWTAuthTests(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
         res = self.client.get('/api/methods/')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+
+class ApiNeverCacheHeaderTests(APITestCaseBase):
+    def test_api_list_response_is_not_cacheable(self):
+        res = self.client.get('/api/expenses/?year=2025&month=4')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('no-store', res['Cache-Control'])
+        self.assertIn('no-cache', res['Cache-Control'])
+
+    def test_non_api_response_is_untouched(self):
+        res = self.client.get('/income_and_expense/')
+        self.assertNotIn('no-store', res.get('Cache-Control', ''))
