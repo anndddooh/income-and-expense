@@ -7,6 +7,7 @@ struct IncomeListView: View {
     @State private var editingIncome: Income?
     @State private var showingDefaultsConfirm = false
     @State private var addedCount: Int? = nil
+    @State private var deleteError: String? = nil
     private let monthStore = MonthStore.shared
 
     var body: some View {
@@ -88,6 +89,19 @@ struct IncomeListView: View {
             },
             message: {
                 Text("\(addedCount ?? 0)件追加しました。")
+            }
+        )
+        .alert(
+            "削除できませんでした",
+            isPresented: Binding(
+                get: { deleteError != nil },
+                set: { if !$0 { deleteError = nil } }
+            ),
+            actions: {
+                Button("OK") { deleteError = nil }
+            },
+            message: {
+                Text(deleteError ?? "")
             }
         )
         .sheet(isPresented: $showingNewForm) {
@@ -209,13 +223,15 @@ struct IncomeListView: View {
         }
     }
 
-    /// 削除後は当月残高もサーバ計算値に合わせるため再取得する。失敗時はエラーを表示する。
+    /// 削除後は当月残高もサーバ計算値に合わせるため再取得する。
+    /// 失敗時はアラートで表示する(一覧下部の errorMessage は長い一覧だと画面外になり気付けない)。
     private func delete(id: Int) async {
         do {
             try await store.delete(id: id)
             await store.fetch(year: monthStore.year, month: monthStore.month)
         } catch {
-            store.errorMessage = (error as? AppError)?.errorDescription
+            Haptics.error()
+            deleteError = (error as? AppError)?.errorDescription
                 ?? error.localizedDescription
         }
     }
