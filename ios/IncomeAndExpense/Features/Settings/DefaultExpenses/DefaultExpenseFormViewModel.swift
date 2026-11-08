@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class DefaultExpenseFormViewModel {
     var name: String = ""
     var payDay: Int = 1

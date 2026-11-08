@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class DashboardViewModel {
     var trends: [TrendMonth] = []
     var currentIncome: Int = 0

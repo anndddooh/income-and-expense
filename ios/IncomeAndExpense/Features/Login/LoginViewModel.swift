@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class LoginViewModel {
     var username: String = ""
     var password: String = ""

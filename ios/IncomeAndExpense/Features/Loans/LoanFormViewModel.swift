@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class LoanFormViewModel {
     var name: String = ""
     var payDay: Int = 1

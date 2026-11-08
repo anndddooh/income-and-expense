@@ -32,6 +32,7 @@ struct TemplateExpense: Codable, Identifiable, Hashable {
 
 /// 支出テンプレート一覧の取得ストア。MethodsStore と同じ「一度取れば使い回す」方針。
 @Observable
+@MainActor
 final class TemplateExpensesStore {
     static let shared = TemplateExpensesStore()
 
