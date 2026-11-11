@@ -59,3 +59,6 @@
 - **React 制御コンポーネントでマイナス値入力には `string` 状態**: `number` 型の state で `-` 単独入力すると `Number("-") === NaN` になり入力が即座に消える。残高など負値を受け付けるフィールドは `string` 型で状態管理し、送信時に `Number()` 変換する（iOS は `.numbersAndPunctuation` キーボード、バックは `IntegerField` 対応済み）。
 <!-- END claude-knowledge -->
 
+- **iOS の `@Observable` クラスは必ず `@MainActor` を付ける**: プロジェクトは Swift 5 モードのため、非隔離クラスの `async` メソッドはバックグラウンドで実行され、SwiftUI が監視するプロパティを裏スレッドで書き換えてしまう。同じ支出を短時間に連続編集して再取得が重なると監視が外れ、サーバーは正しいのに一覧が更新されなくなる（引っ張って更新しても直らず、再起動で直る）。新規 Store/ViewModel を作るときも `@Observable` + `@MainActor` をセットにする。
+- **iOS の API 通信は HTTP キャッシュ無効**: `APIClient` は `URLSession.shared` ではなく、`urlCache = nil` + `.reloadIgnoringLocalCacheData` の専用セッションを使う。Django は Cache-Control を返さないため、既定のセッションだと GET の古い応答が使い回されることがある。バックエンド側も `ApiNeverCacheMiddleware` で `/api/` に `Cache-Control: no-store` を付与済み。
+- **iOS 一覧のエラーは画面下部だと見落とされる**: 一覧の `errorMessage` は「＋ 追加」ボタンの下に出るため、長い一覧では画面外になる。削除失敗など操作直後に知らせたいエラーはアラートで出す（収入/支出一覧の削除は対応済み）。
