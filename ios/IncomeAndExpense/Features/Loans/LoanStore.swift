@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class LoanStore {
     var loans: [Loan] = []
     var isLoading: Bool = false

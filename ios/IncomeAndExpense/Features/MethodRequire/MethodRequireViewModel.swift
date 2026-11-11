@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class MethodRequireViewModel {
     var response: MethodRequireResponse? = nil
     var isLoading: Bool = false

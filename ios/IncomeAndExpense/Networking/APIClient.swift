@@ -62,8 +62,19 @@ final class APIClient {
 
     private let session: URLSession
 
-    init(session: URLSession = .shared) {
+    init(session: URLSession = APIClient.makeNoCacheSession()) {
         self.session = session
+    }
+
+    /// API 用の URLSession。HTTP キャッシュを一切使わない。
+    /// `URLSession.shared` は既定の URLCache + `.useProtocolCachePolicy` で動くため、
+    /// Cache-Control を返さない API の GET レスポンスをヒューリスティックに再利用することがあり、
+    /// 更新(PUT/POST/DELETE)直後の再取得で古い一覧が返る(アプリ再起動で直る)症状の原因になる。
+    static func makeNoCacheSession() -> URLSession {
+        let config = URLSessionConfiguration.default
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
+        return URLSession(configuration: config)
     }
 
     func request<T: Decodable>(_ endpoint: APIEndpoint) async throws -> T {

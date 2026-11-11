@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class DefaultExpenseStore {
     var items: [DefaultExpense] = []
     var isLoading: Bool = false

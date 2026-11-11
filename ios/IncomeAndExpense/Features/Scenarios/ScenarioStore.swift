@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class ScenarioStore {
     var items: [Scenario] = []
     var isLoading: Bool = false
@@ -42,6 +43,7 @@ final class ScenarioStore {
 }
 
 @Observable
+@MainActor
 final class ScenarioDetailStore {
     var scenario: Scenario? = nil
     var summary: ScenarioSummary? = nil

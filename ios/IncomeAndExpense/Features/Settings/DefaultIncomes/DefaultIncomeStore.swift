@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class DefaultIncomeStore {
     var items: [DefaultIncome] = []
     var isLoading: Bool = false

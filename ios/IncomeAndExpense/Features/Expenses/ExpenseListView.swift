@@ -7,6 +7,7 @@ struct ExpenseListView: View {
     @State private var editingExpense: Expense?
     @State private var showingDefaultsConfirm = false
     @State private var addedCount: Int? = nil
+    @State private var deleteError: String? = nil
     private let monthStore = MonthStore.shared
 
     var body: some View {
@@ -90,6 +91,19 @@ struct ExpenseListView: View {
                 Text("\(addedCount ?? 0)件追加しました。")
             }
         )
+        .alert(
+            "削除できませんでした",
+            isPresented: Binding(
+                get: { deleteError != nil },
+                set: { if !$0 { deleteError = nil } }
+            ),
+            actions: {
+                Button("OK") { deleteError = nil }
+            },
+            message: {
+                Text(deleteError ?? "")
+            }
+        )
         .sheet(isPresented: $showingNewForm) {
             ExpenseFormView(
                 viewModel: ExpenseFormViewModel(expense: nil, store: store)
@@ -145,7 +159,7 @@ struct ExpenseListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button(role: .destructive) {
-                            Task { try? await store.delete(id: expense.id) }
+                            Task { await delete(id: expense.id) }
                         } label: {
                             Label("削除", systemImage: "trash")
                         }
@@ -205,6 +219,19 @@ struct ExpenseListView: View {
             Haptics.success()
         } catch {
             store.errorMessage = (error as? AppError)?.errorDescription
+                ?? error.localizedDescription
+        }
+    }
+
+    /// 削除後は当月残高もサーバ計算値に合わせるため再取得する。
+    /// 失敗時はアラートで表示する(一覧下部の errorMessage は長い一覧だと画面外になり気付けない)。
+    private func delete(id: Int) async {
+        do {
+            try await store.delete(id: id)
+            await store.fetch(year: monthStore.year, month: monthStore.month)
+        } catch {
+            Haptics.error()
+            deleteError = (error as? AppError)?.errorDescription
                 ?? error.localizedDescription
         }
     }

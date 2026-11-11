@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class ExpenseStore {
     var expenses: [Expense] = []
     var balance: Int = 0

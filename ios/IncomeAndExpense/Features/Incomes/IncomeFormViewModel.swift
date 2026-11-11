@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class IncomeFormViewModel {
     var name: String = ""
     var payDate: Date = Date()

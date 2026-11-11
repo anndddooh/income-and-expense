@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class MonthStore {
     static let shared = MonthStore()
 
