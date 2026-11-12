@@ -154,3 +154,14 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# DB の日次バックアップ（manage.py backup_db）の退避先: Cloudflare R2（S3 互換）。
+# 値はすべてサーバー（Dokku）の環境変数で管理する。未設定ならコマンドがエラーで止まる。
+BACKUP_R2_ACCESS_KEY_ID = os.environ.get('BACKUP_R2_ACCESS_KEY_ID')
+BACKUP_R2_SECRET_ACCESS_KEY = os.environ.get('BACKUP_R2_SECRET_ACCESS_KEY')
+BACKUP_R2_ENDPOINT_URL = os.environ.get('BACKUP_R2_ENDPOINT_URL')
+BACKUP_R2_BUCKET_NAME = os.environ.get('BACKUP_R2_BUCKET_NAME')
+# 保持世代数。超過した古い世代は backup_db 実行時に自動削除する。
+BACKUP_RETENTION = int(os.environ.get('BACKUP_RETENTION', '30'))
+# バケット内のキー接頭辞。他アプリとバケットを共有する場合はアプリごとに分ける。
+BACKUP_PREFIX = os.environ.get('BACKUP_PREFIX', 'income-and-expense/db-backups/')
