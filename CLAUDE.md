@@ -62,3 +62,4 @@
 - **iOS の `@Observable` クラスは必ず `@MainActor` を付ける**: プロジェクトは Swift 5 モードのため、非隔離クラスの `async` メソッドはバックグラウンドで実行され、SwiftUI が監視するプロパティを裏スレッドで書き換えてしまう。同じ支出を短時間に連続編集して再取得が重なると監視が外れ、サーバーは正しいのに一覧が更新されなくなる（引っ張って更新しても直らず、再起動で直る）。新規 Store/ViewModel を作るときも `@Observable` + `@MainActor` をセットにする。
 - **iOS の API 通信は HTTP キャッシュ無効**: `APIClient` は `URLSession.shared` ではなく、`urlCache = nil` + `.reloadIgnoringLocalCacheData` の専用セッションを使う。Django は Cache-Control を返さないため、既定のセッションだと GET の古い応答が使い回されることがある。バックエンド側も `ApiNeverCacheMiddleware` で `/api/` に `Cache-Control: no-store` を付与済み。
 - **iOS 一覧のエラーは画面下部だと見落とされる**: 一覧の `errorMessage` は「＋ 追加」ボタンの下に出るため、長い一覧では画面外になる。削除失敗など操作直後に知らせたいエラーはアラートで出す（収入/支出一覧の削除は対応済み）。
+- **本番 DB は毎日 R2 に退避**: `manage.py backup_db`（dumpdata+gzip → Cloudflare R2、30 世代）を VPS root の cron が 03:45 JST に `dokku run` する。Rentalist と同じ方式で、バケットを共有する場合は `BACKUP_PREFIX` でアプリを分ける。設定・cron・復旧手順は `docs/db-backup.md`。復旧は空 DB に `migrate` → `loaddata <file>.json.gz`（解凍不要）。
