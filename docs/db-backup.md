@@ -90,3 +90,31 @@ contenttypes / auth.permission / session / admin ログは `migrate` で再生�
 | 2026-11-12 | ローカル PostgreSQL（2,524 オブジェクト） | 空の SQLite に migrate → loaddata | 全件復元、モデル別件数一致 |
 
 本番の件数は `ssh -n dokku@167.172.65.18 run income-and-expense python manage.py dumpdata income_and_expense auth.user` の出力を手元で数えて確かめた（読み取りのみ。`shell -c` はリモートで引用符が何重にも解釈されて使えない）。
+
+## 7. 失敗したら LINE に知らせる見張り（3 アプリ共通）
+
+VPS の root の cron で毎日 04:45 JST に `/usr/local/bin/backup-check.sh` を動かし、
+Rentalist / income-and-expense / cardfolio の今朝のバックアップが確認できないときだけ、
+LINE 公式アカウント「サーバー通知」から知らせる。実行されなかった場合（cron の行が壊れた・VPS が止まっていた等）も検知する。
+
+- スクリプトの控え: このリポジトリの `tools/backup-check.sh`（VPS 上のものを直したら、ここにも反映する）
+- 確認の仕方:
+  - Rentalist / income-and-expense: 各ログに、今日（UTC）の日付のファイル名で「R2 にアップロードしました」があるか
+  - cardfolio: Dokku cron で動くため、実行記録（`ScheduledJobRun` の `backup_db`）が今日 ok になっているか
+- 時刻: 3 アプリのバックアップ（03:15 / 03:45 / 04:15）の後、cardfolio の相場取得（05:00）の前
+- LINE の設定: `/root/.line-notify.env`（権限 600）に `LINE_CHANNEL_ACCESS_TOKEN` と `LINE_TO_USER_ID`。
+  チャネルは netflix-deadline・cardfolio と同じプロバイダーの「サーバー通知」で、送り先のユーザー ID も共通。
+  値はチャットや git に出さない。トークンを作り直したら、`read -rs` で入力してこのファイルを書き直す。
+- 記録: `/var/log/backup-check.log`（毎日 OK / NG と LINE 送信の結果が 1 行ずつ残る）
+
+```bash
+# root の crontab に登録（済み）
+45 19 * * * /usr/local/bin/backup-check.sh >> /var/log/backup-check.log 2>&1
+
+# 手動での確認
+/usr/local/bin/backup-check.sh --dry-run                            # 判定だけ表示（送らない）
+BACKUP_CHECK_DATE=2026-11-01 /usr/local/bin/backup-check.sh --dry-run  # 日付を変えて NG の文面を確認
+/usr/local/bin/backup-check.sh --test                               # LINE にテスト送信
+```
+
+アプリを増やしたときは、`main()` に確認を 1 行足し、バックアップの時刻をこの見張りより前に置く。
