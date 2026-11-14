@@ -86,6 +86,7 @@ contenttypes / auth.permission / session / admin ログは `migrate` で再生�
 
 | 日付 | 元データ | 復元先 | 結果 |
 | --- | --- | --- | --- |
+| 2026-11-14 | 本番の手動バックアップ（1,388 オブジェクト、gz 17 KB） | 手元の空の PostgreSQL に migrate → loaddata（約 14 秒） | 全件復元。本番の現在の件数とモデル別に一致、主キーのシーケンスが最大 ID に追従、支出 → 支払方法 → 口座 → 利用者・銀行の関連も維持 |
 | 2026-11-12 | ローカル PostgreSQL（2,524 オブジェクト） | 空の SQLite に migrate → loaddata | 全件復元、モデル別件数一致 |
 
-本番のダンプでの復元テストは、cron 稼働後にステージング用の Neon ブランチで実施して追記する。
+本番の件数は `ssh -n dokku@167.172.65.18 run income-and-expense python manage.py dumpdata income_and_expense auth.user` の出力を手元で数えて確かめた（読み取りのみ。`shell -c` はリモートで引用符が何重にも解釈されて使えない）。
