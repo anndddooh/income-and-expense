@@ -25,7 +25,7 @@
 - 原則: 検証ブランチ → ステージング/プレビュー、`main` → 本番。両者を分離し、検証が本番データ・本番URLを汚さないようにする
 
 <!-- BEGIN claude-knowledge (distill 自動管理 / この外側は温存) -->
-## 既知の決定・ハマり所（自動蒸留 / 2026-10-22 更新）
+## 既知の決定・ハマり所（自動蒸留 / 2026-11-13 更新）
 - **本番への単発操作は `dokku run`**: `ssh dokku@167.172.65.18 run income-and-expense python manage.py shell < script.py` は標準入力が届かず**黙って何も実行されない**。スクリプトは引数で渡し（コンテナ側で引用符が二重評価されるためコード中のダブルクォート不可）、実行後は読み取り専用クエリで結果を確認する。
 - **過去月にはデフォルト収入/支出を追加できない**（`api_views.py` の `_can_add_default`、仕様）。過去月への補正は本番 Django shell でガードのみ外して `add_defaults` 相当を呼ぶ（同名項目はスキップされる）。
 - **本番 SSH の鍵はパスフレーズ付き**: ssh-agent 未登録だと `Permission denied (publickey)`。ユーザーに端末で `ssh-add --apple-use-keychain ~/.ssh/id_ed25519` してもらう（パスフレーズはチャットに貼らせない）。
@@ -62,4 +62,4 @@
 - **iOS の `@Observable` クラスは必ず `@MainActor` を付ける**: プロジェクトは Swift 5 モードのため、非隔離クラスの `async` メソッドはバックグラウンドで実行され、SwiftUI が監視するプロパティを裏スレッドで書き換えてしまう。同じ支出を短時間に連続編集して再取得が重なると監視が外れ、サーバーは正しいのに一覧が更新されなくなる（引っ張って更新しても直らず、再起動で直る）。新規 Store/ViewModel を作るときも `@Observable` + `@MainActor` をセットにする。
 - **iOS の API 通信は HTTP キャッシュ無効**: `APIClient` は `URLSession.shared` ではなく、`urlCache = nil` + `.reloadIgnoringLocalCacheData` の専用セッションを使う。Django は Cache-Control を返さないため、既定のセッションだと GET の古い応答が使い回されることがある。バックエンド側も `ApiNeverCacheMiddleware` で `/api/` に `Cache-Control: no-store` を付与済み。
 - **iOS 一覧のエラーは画面下部だと見落とされる**: 一覧の `errorMessage` は「＋ 追加」ボタンの下に出るため、長い一覧では画面外になる。削除失敗など操作直後に知らせたいエラーはアラートで出す（収入/支出一覧の削除は対応済み）。
-- **本番 DB は毎日 R2 に退避**: `manage.py backup_db`（dumpdata+gzip → Cloudflare R2、30 世代）を VPS root の cron が 03:45 JST に `dokku run` する。Rentalist と同じ方式で、バケットを共有する場合は `BACKUP_PREFIX` でアプリを分ける。設定・cron・復旧手順は `docs/db-backup.md`。復旧は空 DB に `migrate` → `loaddata <file>.json.gz`（解凍不要）。
+- **本番 DB は毎日 R2 に退避**: `manage.py backup_db`（dumpdata+gzip → Cloudflare R2、30 世代）を VPS root の cron が 03:45 JST に `dokku run` する。Rentalist と同じ方式。保存先は専用バケット `income-and-expense-backups` の `db-backups/`（`BACKUP_PREFIX` で指定）。設定・cron・復旧手順は `docs/db-backup.md`。復旧は空 DB に `migrate` → `loaddata <file>.json.gz`（解凍不要）。
