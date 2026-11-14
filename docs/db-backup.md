@@ -8,16 +8,17 @@ Cloudflare R2 に退避する。Rentalist（同じ VPS の `rentalist-api`）と
 VPS root の cron（毎日 03:45 JST）
   → dokku run income-and-expense python manage.py backup_db
   → dumpdata（JSON）+ gzip
-  → R2: <バケット>/income-and-expense/db-backups/income-and-expense-<UTC時刻>.json.gz
+  → R2: income-and-expense-backups/db-backups/income-and-expense-<UTC時刻>.json.gz
   → 30 世代を超えた古い分を自動削除
 ```
 
 ## 1. R2 の用意（初回のみ）
 
 1. Cloudflare ダッシュボード → R2 → バックアップ用バケットを用意する。
-   - Rentalist の `rentalist-backups` を共有してよい。キーの接頭辞
-     （`BACKUP_PREFIX`、既定 `income-and-expense/db-backups/`）でアプリを分けているため、
-     世代削除は自アプリの分にしか効かない。
+   - 専用バケット `income-and-expense-backups` を使う（2026-11 作成）。トークンをこのバケットに
+     限定でき、古い世代の削除が他アプリのファイルに及ばない。
+   - 接頭辞は `BACKUP_PREFIX=db-backups/` を設定して短くしている。コードの既定値
+     `income-and-expense/db-backups/` は、他アプリとバケットを共有する場合のためのもの。
    - 公開設定は不要（非公開のまま）。
 2. R2 → API トークンを管理 → 「オブジェクト読み取りと書き込み」で対象バケットに限定したトークンを作る。
    Access Key ID / Secret Access Key / エンドポイント（`https://<アカウントID>.r2.cloudflarestorage.com`）を控える。
@@ -29,7 +30,8 @@ VPS 上の端末で直接実行する（値はチャットに貼らない）。
 
 ```bash
 ssh dokku@167.172.65.18 config:set --no-restart income-and-expense \
-  BACKUP_R2_BUCKET_NAME=rentalist-backups \
+  BACKUP_R2_BUCKET_NAME=income-and-expense-backups \
+  BACKUP_PREFIX=db-backups/ \
   BACKUP_R2_ACCESS_KEY_ID=... \
   BACKUP_R2_SECRET_ACCESS_KEY=... \
   BACKUP_R2_ENDPOINT_URL=https://<アカウントID>.r2.cloudflarestorage.com
@@ -41,7 +43,7 @@ ssh dokku@167.172.65.18 ps:rebuild income-and-expense   # buildpack は env を�
 
 ```bash
 ssh dokku@167.172.65.18 run income-and-expense python manage.py backup_db
-# → R2 にアップロードしました: s3://.../income-and-expense/db-backups/income-and-expense-YYYYMMDDThhmmssZ.json.gz
+# → R2 にアップロードしました: s3://income-and-expense-backups/db-backups/income-and-expense-YYYYMMDDThhmmssZ.json.gz
 ```
 
 R2 に接続せず中身だけ確かめたい場合は `--local-only`（コンテナ内のカレントに gz を出力して終了する）。
@@ -64,7 +66,7 @@ crontab -e
 `dokku run` は毎回まっさらなコンテナで動き、ホストのファイルが見えない。
 そのため**手元の作業マシンで `DATABASE_URL` を復旧先に向けて実行する**。
 
-1. Cloudflare ダッシュボード → R2 → バケット → `income-and-expense/db-backups/` から最新の `.json.gz` をダウンロードする。
+1. Cloudflare ダッシュボード → R2 → `income-and-expense-backups` → `db-backups/` から最新の `.json.gz` をダウンロードする。
    R2 のトークンを VPS の IP に限定している場合は、手元から `aws s3 cp` などで取ると AccessDenied になる（Rentalist で確認済み）。
 2. 復旧先の空 DB を用意する（Neon の新しいブランチなど）。接続は **Direct URL（`-pooler` なし）**を使う。
 3. スキーマを作ってから流し込む。`loaddata` は `.json.gz` をそのまま読める（解凍は不要）。
