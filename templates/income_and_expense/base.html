@@ -65,7 +65,11 @@
 					<a class="nav-link" href="{% url 'income_and_expense:loan' this_year this_mon %}">ローン</a>
 				</li>
 				<li class="nav-item" id="nav-item-logout">
-					<a class="nav-link" href="{% url 'income_and_expense:logout' %}">ログアウト</a>
+					{# Django 5.0 以降 LogoutView は POST のみ受け付けるためフォームで送る #}
+					<form method="post" action="{% url 'income_and_expense:logout' %}" class="form-inline">
+						{% csrf_token %}
+						<button type="submit" class="nav-link btn btn-link">ログアウト</button>
+					</form>
 				</li>
 			</ul>
 		</div>
