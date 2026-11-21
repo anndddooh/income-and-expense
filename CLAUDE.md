@@ -25,12 +25,12 @@
 - 原則: 検証ブランチ → ステージング/プレビュー、`main` → 本番。両者を分離し、検証が本番データ・本番URLを汚さないようにする
 
 <!-- BEGIN claude-knowledge (distill 自動管理 / この外側は温存) -->
-## 既知の決定・ハマり所（自動蒸留 / 2026-10-22 更新）
+## 既知の決定・ハマり所（自動蒸留 / 2026-11-13 更新）
 - **本番への単発操作は `dokku run`**: `ssh dokku@167.172.65.18 run income-and-expense python manage.py shell < script.py` は標準入力が届かず**黙って何も実行されない**。スクリプトは引数で渡し（コンテナ側で引用符が二重評価されるためコード中のダブルクォート不可）、実行後は読み取り専用クエリで結果を確認する。
 - **過去月にはデフォルト収入/支出を追加できない**（`api_views.py` の `_can_add_default`、仕様）。過去月への補正は本番 Django shell でガードのみ外して `add_defaults` 相当を呼ぶ（同名項目はスキップされる）。
 - **本番 SSH の鍵はパスフレーズ付き**: ssh-agent 未登録だと `Permission denied (publickey)`。ユーザーに端末で `ssh-add --apple-use-keychain ~/.ssh/id_ed25519` してもらう（パスフレーズはチャットに貼らせない）。
-- **デプロイは push で自動化されている**: フロント(Cloudflare)・iOS(Xcode Cloud)・バック(Dokku リモートへの push)いずれも push で自動ビルド・デプロイが走る。GitHub Actions が無いからと「CI 無し・手動 `wrangler deploy` 必要」と誤認しない（上の TODO はこの自動化に加えて、検証ブランチ用の**別ステージング**を整備する話）。
-- **ブランチ運用**: 作業ブランチ → develop へ `--no-ff` マージ → push（自動ビルドでステージング確認）→ 承認後 develop → main + タグ（`Ver3.x` 系）。**タグを打ったら `origin` に push する**（`git push origin main` と `git push origin <tag>`。push で本番の自動デプロイが走る）。
+- **デプロイは push で自動化されている**: フロント(Cloudflare)・iOS(Xcode Cloud)・バック(Dokku リモートへの push)いずれも push で自動ビルド・デプロイが走る。ただし**バックエンドは GitHub への push では反映されず、Dokku リモートへの push（本番 `git push dokku main`、ステージング `git push dokku-staging develop:main`）を手動で行う必要がある**（Ver3.7 で抜けて本番が 2026-07 のまま残っていた。Ver3.8 で反映）。GitHub Actions が無いからと「CI 無し・手動 `wrangler deploy` 必要」と誤認しない（上の TODO はこの自動化に加えて、検証ブランチ用の**別ステージング**を整備する話）。
+- **ブランチ運用**: 作業ブランチ → develop へ `--no-ff` マージ → push（自動ビルドでステージング確認）→ 承認後 develop → main + タグ（`Ver3.x` 系）。**タグを打ったら `origin` に push する**（`git push origin main` と `git push origin <tag>`。push で本番の自動デプロイが走る）。**バックエンドに変更があるリリースでは続けて `git push dokku main` も行い**、本番 API の応答で反映を確かめる。手元から ssh で `dokku run` するときは `ssh -n` を付ける（付けないと標準入力待ちで終わらないことがある）。
 - **App Store Connect アップロードは iOS 26 SDK 必須 → Xcode Cloud のみ有効**: Xcode 15.2 (iOS 17.2 SDK) から直接アップロードすると `"built with the iOS 17.2 SDK. All iOS and iPadOS apps must be built with the iOS 26 SDK or later"` エラーになる。Xcode 26 は macOS Sonoma 以降が必要（MacBook Pro 2017 は Ventura が上限）→ Xcode Cloud 経由のみ。USB 実機デバッグも同様に DDI ミスマッチで不可。
 - **TestFlight 配布フロー**: 外部テスターはビルドごとに Beta App Review 提出が必要（初回通過後は軽微変更で数分〜数時間）。ビルド番号 (`CURRENT_PROJECT_VERSION`) は毎アップロードに +1 必須（pbxproj 内 6 箇所）。「ビルド番号上げてpush」で依頼可。内部グループへのビルド割り当ても手動（「+」ボタン）が必要で「Xcodeビルドを自動配信」表示は見かけ倒し。
 - **iOS 一覧・表示画面は `List(.insetGrouped)` を使わない** → `ScrollView + VStack(spacing:12) + yutoriCard()`。理由: insetGrouped はセクション間に除去不能の固定余白を挿入し「奇妙な隙間」になる。削除は `.contextMenu`（`swipeActions` は List 専用）、更新は `.refreshable`。入力フォームだけは iOS 標準 `Form` を維持。
@@ -62,4 +62,4 @@
 - **iOS の `@Observable` クラスは必ず `@MainActor` を付ける**: プロジェクトは Swift 5 モードのため、非隔離クラスの `async` メソッドはバックグラウンドで実行され、SwiftUI が監視するプロパティを裏スレッドで書き換えてしまう。同じ支出を短時間に連続編集して再取得が重なると監視が外れ、サーバーは正しいのに一覧が更新されなくなる（引っ張って更新しても直らず、再起動で直る）。新規 Store/ViewModel を作るときも `@Observable` + `@MainActor` をセットにする。
 - **iOS の API 通信は HTTP キャッシュ無効**: `APIClient` は `URLSession.shared` ではなく、`urlCache = nil` + `.reloadIgnoringLocalCacheData` の専用セッションを使う。Django は Cache-Control を返さないため、既定のセッションだと GET の古い応答が使い回されることがある。バックエンド側も `ApiNeverCacheMiddleware` で `/api/` に `Cache-Control: no-store` を付与済み。
 - **iOS 一覧のエラーは画面下部だと見落とされる**: 一覧の `errorMessage` は「＋ 追加」ボタンの下に出るため、長い一覧では画面外になる。削除失敗など操作直後に知らせたいエラーはアラートで出す（収入/支出一覧の削除は対応済み）。
-- **本番 DB は毎日 R2 に退避**: `manage.py backup_db`（dumpdata+gzip → Cloudflare R2、30 世代）を VPS root の cron が 03:45 JST に `dokku run` する。Rentalist と同じ方式で、バケットを共有する場合は `BACKUP_PREFIX` でアプリを分ける。設定・cron・復旧手順は `docs/db-backup.md`。復旧は空 DB に `migrate` → `loaddata <file>.json.gz`（解凍不要）。
+- **本番 DB は毎日 R2 に退避**: `manage.py backup_db`（dumpdata+gzip → Cloudflare R2、30 世代）を VPS root の cron が 03:45 JST に `dokku run` する。Rentalist と同じ方式。保存先は専用バケット `income-and-expense-backups` の `db-backups/`（`BACKUP_PREFIX` で指定）。設定・cron・復旧手順は `docs/db-backup.md`。復旧は空 DB に `migrate` → `loaddata <file>.json.gz`（解凍不要）。
