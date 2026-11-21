@@ -17,4 +17,3 @@ TEMPLATES[0]['OPTIONS']['debug'] = False  # noqa: F405
 
 LANGUAGE_CODE = 'en-us'
 USE_I18N = False
-USE_L10N = False
